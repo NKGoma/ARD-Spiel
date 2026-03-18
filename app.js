@@ -656,79 +656,16 @@ function getGridPos(idx) {
 }
 
 function renderBoard() {
-  const grid = document.getElementById('board-grid');
-  grid.innerHTML = '';
-
-  BOARD.forEach((space, idx) => {
-    const { row, col } = getGridPos(idx);
-    const div = document.createElement('div');
-    div.id = `space-${idx}`;
-    div.className = `board-space board-space--${space.type}`;
-    div.style.gridRow    = row;
-    div.style.gridColumn = col;
-
-    let icon = '';
-    let color = 'rgba(255,255,255,0.06)';
-    if (space.type === 'question' || space.type === 'bonus') {
-      const w = WORLDS[space.cat];
-      color = w.accentGlow + '33';
-      div.style.borderColor = w.accentGlow + '55';
-      icon = space.type === 'bonus' ? `<span class="space-bonus-star">⭐</span>${w.emoji}` : w.emoji;
-    } else if (space.type === 'duel')  { icon = '⚔️'; color='rgba(255,80,0,0.18)'; div.style.borderColor='rgba(255,80,0,0.45)'; }
-    else if (space.type === 'event')   { icon = '📺'; color='rgba(0,100,255,0.18)'; div.style.borderColor='rgba(0,100,255,0.45)'; }
-    else if (space.type === 'start')   { icon = '🏁'; color='rgba(255,215,0,0.15)'; div.style.borderColor='rgba(255,215,0,0.5)'; }
-    else if (space.type === 'end')     { icon = '🏆'; color='rgba(255,215,0,0.25)'; div.style.borderColor='rgba(255,215,0,0.8)'; }
-
-    div.style.background = color;
-    div.innerHTML = `<span class="space-icon">${icon}</span><span class="space-num">${idx}</span>`;
-    grid.appendChild(div);
-  });
-
-  renderTokens();
+  // 3D forest board — sync all player positions on the platforms
+  gameState.players.forEach(p => Forest3D.setPlayerPosition(p.id, p.position));
 }
 
 /* ═════════════════════════════════════════
    TOKEN RENDERING
 ═════════════════════════════════════════ */
 function renderTokens() {
-  const layer   = document.getElementById('token-layer');
-  const wrapper = document.getElementById('board-wrapper');
-  if (!layer || !wrapper) return;
-  layer.innerHTML = '';
-
-  // Group players by position
-  const byPos = {};
-  gameState.players.forEach(p => {
-    if (!byPos[p.position]) byPos[p.position] = [];
-    byPos[p.position].push(p);
-  });
-
-  Object.entries(byPos).forEach(([pos, players]) => {
-    const spaceEl = document.getElementById(`space-${pos}`);
-    if (!spaceEl) return;
-    const sRect = spaceEl.getBoundingClientRect();
-    const wRect = wrapper.getBoundingClientRect();
-    const cx = sRect.left - wRect.left + sRect.width / 2;
-    const cy = sRect.top  - wRect.top  + sRect.height / 2;
-    const n  = players.length;
-
-    players.forEach((p, i) => {
-      const offX = n > 1 ? (i - (n-1)/2) * 14 : 0;
-      const offY = 0;
-      const token = document.createElement('div');
-      token.id = `token-${p.id}`;
-      token.className = 'player-token';
-      token.style.cssText = `
-        left:${(cx + offX).toFixed(1)}px;
-        top:${(cy + offY).toFixed(1)}px;
-        background:${p.color};
-        box-shadow: 0 0 12px ${p.color}88;
-      `;
-      token.textContent = p.avatar;
-      if (p.id === currentPlayer().id) token.classList.add('token-active');
-      layer.appendChild(token);
-    });
-  });
+  // 3D forest — sync sphere positions for all players
+  gameState.players.forEach(p => Forest3D.setPlayerPosition(p.id, p.position));
 }
 
 /* ═════════════════════════════════════════
@@ -779,6 +716,7 @@ function updateScoreStrip() {
 
 function updateTurnControls() {
   const cp = currentPlayer();
+  Forest3D.focusOn(cp.position);
   document.getElementById('cp-avatar').textContent = cp.avatar;
   document.getElementById('cp-name').textContent   = cp.name || `Spieler ${gameState.currentPlayerIdx+1}`;
   const rollBtn = document.getElementById('roll-btn');
@@ -817,26 +755,8 @@ function animateDice(finalValue, callback) {
    MOVE ANIMATION (step by step)
 ═════════════════════════════════════════ */
 function animateMove(player, steps, onLand) {
-  if (steps <= 0) { onLand(); return; }
-  const next = Math.min(player.position + 1, BOARD.length - 1);
-  player.position = next;
-  renderTokens();
-  synthNav();
-
-  // Flash the space briefly
-  const spaceEl = document.getElementById(`space-${next}`);
-  if (spaceEl) {
-    spaceEl.classList.add('space-visited');
-    setTimeout(() => spaceEl.classList.remove('space-visited'), 180);
-  }
-
-  setTimeout(() => {
-    if (next === BOARD.length - 1) {
-      onLand();
-    } else {
-      animateMove(player, steps - 1, onLand);
-    }
-  }, 230);
+  // Delegate to 3D forest jump animation
+  Forest3D.movePlayer(player, steps, onLand);
 }
 
 /* ═════════════════════════════════════════
@@ -1416,6 +1336,9 @@ const Game = {
     _wheelUsedThisTurn = false;
 
     showScreen('screen-board');
+    Forest3D.destroy();
+    Forest3D.init();
+    Forest3D.createPlayers(gameState.players);
     renderBoard();
     renderScoreStrip();
     updateTurnControls();
@@ -1539,6 +1462,9 @@ const Game = {
     if (wBtn) wBtn.classList.remove('used');
 
     showScreen('screen-board');
+    Forest3D.destroy();
+    Forest3D.init();
+    Forest3D.createPlayers(gameState.players);
     renderBoard();
     renderScoreStrip();
     updateTurnControls();
@@ -1550,6 +1476,294 @@ const Game = {
     }, 400);
   },
 };
+
+/* ═════════════════════════════════════════
+   FOREST 3D ENVIRONMENT
+═════════════════════════════════════════ */
+const Forest3D = (() => {
+  let _scene, _camera, _renderer, _animId, _resizeObs;
+  let _platforms = [];
+  let _playerMeshes = {};
+  let _positions = [];
+  let _camTarget = null;
+  let _leaves = [];
+  let _endPulse = 0;
+  const TAU = Math.PI * 2;
+
+  const PLAT_COLORS = {
+    start:                0x27ae60,
+    end:                  0xf1c40f,
+    bonus:                0xd4a017,
+    duel:                 0xc0392b,
+    event:                0x2980b9,
+    question_grundwissen: 0x2ecc71,
+    question_sport:       0x3498db,
+    question_musik:       0x9b59b6,
+    question_humor:       0xf39c12,
+    question_geschichte:  0xe67e22,
+    question_kultur:      0x1abc9c,
+  };
+
+  function platColor(space) {
+    if (space.type === 'question') return PLAT_COLORS['question_' + space.cat] || 0x005a9f;
+    return PLAT_COLORS[space.type] || 0x005a9f;
+  }
+
+  function buildPositions() {
+    _positions = [];
+    for (let i = 0; i < 30; i++) {
+      const row = Math.floor(i / 6), col = i % 6;
+      const x = row % 2 === 0 ? (col - 2.5) * 2.3 : (2.5 - col) * 2.3;
+      const z = (row - 2) * 2.7;
+      const y = 0.1 + Math.sin(i * 0.85) * 0.1;
+      _positions.push(new THREE.Vector3(x, y, z));
+    }
+  }
+
+  function addTree(x, z, sc) {
+    const g = new THREE.Group();
+    const tr = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.13 * sc, 0.18 * sc, 1.3 * sc, 6),
+      new THREE.MeshLambertMaterial({ color: 0x4a2a0a })
+    );
+    tr.position.y = 0.65 * sc;
+    g.add(tr);
+    [[0.90, 1.7, 0x1a4820], [0.65, 1.3, 0x236b2e], [0.45, 1.0, 0x2d8040]].forEach(([r, h, col], li) => {
+      const cone = new THREE.Mesh(
+        new THREE.ConeGeometry(r * sc, h * sc, 8),
+        new THREE.MeshLambertMaterial({ color: col })
+      );
+      cone.position.y = (1.3 + li * 0.9 + h / 2) * sc;
+      g.add(cone);
+    });
+    g.position.set(x, 0, z);
+    g.rotation.y = Math.random() * TAU;
+    _scene.add(g);
+  }
+
+  function buildForest() {
+    const occupied = new Set(_positions.map(p => Math.round(p.x * 2) + ',' + Math.round(p.z * 2)));
+    function safe(x, z) { return !occupied.has(Math.round(x * 2) + ',' + Math.round(z * 2)); }
+    for (let x = -11; x <= 11; x += 2.1) {
+      if (safe(x, -10)) addTree(x + (Math.random() - .5) * .7, -10 + (Math.random() - .5) * .6, .8 + Math.random() * .9);
+      if (safe(x,  10)) addTree(x + (Math.random() - .5) * .7,  10 + (Math.random() - .5) * .6, .8 + Math.random() * .9);
+    }
+    for (let z = -8; z <= 8; z += 2.1) {
+      if (safe(-11, z)) addTree(-11 + (Math.random() - .5) * .6, z + (Math.random() - .5) * .7, .8 + Math.random() * .9);
+      if (safe( 11, z)) addTree( 11 + (Math.random() - .5) * .6, z + (Math.random() - .5) * .7, .8 + Math.random() * .9);
+    }
+    [[-6,-1.3],[0,-1.3],[6,-1.3],[-6,1.3],[0,1.3],[6,1.3],
+     [-4,-4],[2,-4],[-2,-4],[4,-4],[-4,4],[2,4],[-2,4],[4,4],
+     [-7.5,-3],[7.5,-3],[-7.5,3],[7.5,3]].forEach(([x, z]) => {
+      const jx = x + (Math.random() - .5) * .9, jz = z + (Math.random() - .5) * .9;
+      if (safe(jx, jz)) addTree(jx, jz, .65 + Math.random() * .7);
+    });
+  }
+
+  function buildPlatforms() {
+    _platforms = [];
+    BOARD.forEach((space, i) => {
+      const col = platColor(space);
+      const disc = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.72, 0.72, 0.18, 8),
+        new THREE.MeshPhongMaterial({ color: col, shininess: 35 })
+      );
+      disc.position.copy(_positions[i]);
+      _scene.add(disc);
+      _platforms.push(disc);
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(0.78, 0.045, 5, 12),
+        new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.18 })
+      );
+      ring.position.copy(_positions[i]);
+      ring.position.y += 0.09;
+      ring.rotation.x = Math.PI / 2;
+      _scene.add(ring);
+      if (space.type === 'end') {
+        const gr = new THREE.Mesh(
+          new THREE.TorusGeometry(0.94, 0.07, 5, 12),
+          new THREE.MeshBasicMaterial({ color: 0xf1c40f, transparent: true, opacity: 0.7 })
+        );
+        gr.position.copy(_positions[i]);
+        gr.position.y += 0.1;
+        gr.rotation.x = Math.PI / 2;
+        _scene.add(gr);
+      }
+    });
+  }
+
+  function buildPlayerSpheres(players) {
+    Object.values(_playerMeshes).forEach(pm => { _scene.remove(pm.mesh); _scene.remove(pm.light); });
+    _playerMeshes = {};
+    players.forEach(p => {
+      const hex = parseInt(p.color.replace('#', ''), 16);
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(0.34, 14, 10),
+        new THREE.MeshPhongMaterial({ color: hex, emissive: hex, emissiveIntensity: 0.15, shininess: 90 })
+      );
+      mesh.position.copy(_positions[0]);
+      mesh.position.y += 0.55;
+      _scene.add(mesh);
+      const light = new THREE.PointLight(hex, 0.9, 2.8);
+      light.position.copy(mesh.position);
+      _scene.add(light);
+      _playerMeshes[p.id] = { mesh, light };
+    });
+  }
+
+  function spawnLeaves() {
+    _leaves = [];
+    for (let i = 0; i < 30; i++) {
+      const mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.15, 0.12),
+        new THREE.MeshBasicMaterial({ color: 0x2d5a1b, transparent: true, opacity: 0.5, side: THREE.DoubleSide })
+      );
+      resetLeaf(mesh);
+      _scene.add(mesh);
+      _leaves.push({ mesh, spd: 0.009 + Math.random() * 0.013, dx: (Math.random() - .5) * 0.004 });
+    }
+  }
+
+  function resetLeaf(mesh) {
+    mesh.position.set((Math.random() - .5) * 18, 5 + Math.random() * 5, (Math.random() - .5) * 14);
+    mesh.rotation.set(Math.random() * TAU, Math.random() * TAU, Math.random() * TAU);
+  }
+
+  function loop() {
+    _animId = requestAnimationFrame(loop);
+    if (_camTarget) {
+      const goal = _camTarget.clone().add(new THREE.Vector3(0, 8.5, 11));
+      _camera.position.lerp(goal, 0.05);
+      _camera.lookAt(_camTarget.x, _camTarget.y + 1.2, _camTarget.z);
+    }
+    _leaves.forEach(({ mesh, spd, dx }) => {
+      mesh.position.y -= spd;
+      mesh.position.x += dx;
+      mesh.rotation.z += 0.008;
+      if (mesh.position.y < -1) resetLeaf(mesh);
+    });
+    if (_platforms[29]) {
+      _endPulse += 0.04;
+      _platforms[29].material.emissive.setHex(0xf1c40f);
+      _platforms[29].material.emissiveIntensity = 0.1 + Math.abs(Math.sin(_endPulse)) * 0.45;
+    }
+    _renderer.render(_scene, _camera);
+  }
+
+  function pointAt(idx) {
+    _camTarget = (_positions[idx] || _positions[0]).clone();
+  }
+
+  return {
+    init() {
+      const canvas = document.getElementById('three-canvas');
+      if (!canvas || typeof THREE === 'undefined') return;
+      _endPulse = 0;
+      _scene = new THREE.Scene();
+      _scene.background = new THREE.Color(0x0b1a0b);
+      _scene.fog = new THREE.Fog(0x0b1a0b, 18, 44);
+      const w = canvas.offsetWidth || 400, h = canvas.offsetHeight || 300;
+      _camera = new THREE.PerspectiveCamera(52, w / h, 0.1, 80);
+      _renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      _renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      _renderer.setSize(w, h, false);
+      _scene.add(new THREE.HemisphereLight(0x87ceeb, 0x2d5a1b, 0.55));
+      const sun = new THREE.DirectionalLight(0xfff3cc, 1.1);
+      sun.position.set(8, 14, 5);
+      _scene.add(sun);
+      _scene.add(new THREE.AmbientLight(0x1a3a1a, 0.4));
+      const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(80, 80),
+        new THREE.MeshLambertMaterial({ color: 0x152515 })
+      );
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = -0.2;
+      _scene.add(ground);
+      buildPositions();
+      buildForest();
+      buildPlatforms();
+      spawnLeaves();
+      pointAt(0);
+      _camera.position.copy(_camTarget.clone().add(new THREE.Vector3(0, 8.5, 11)));
+      _camera.lookAt(_camTarget.x, _camTarget.y + 1.2, _camTarget.z);
+      _resizeObs = new ResizeObserver(() => {
+        const w2 = canvas.offsetWidth, h2 = canvas.offsetHeight;
+        if (w2 && h2) { _camera.aspect = w2 / h2; _camera.updateProjectionMatrix(); _renderer.setSize(w2, h2, false); }
+      });
+      _resizeObs.observe(canvas);
+      loop();
+    },
+
+    createPlayers(players) {
+      if (!_scene) return;
+      buildPlayerSpheres(players);
+    },
+
+    setPlayerPosition(playerId, idx) {
+      const pm = _playerMeshes[playerId];
+      if (!pm || !_positions[idx]) return;
+      const pos = _positions[idx].clone();
+      pos.y += 0.55;
+      pm.mesh.position.copy(pos);
+      pm.light.position.copy(pos);
+    },
+
+    movePlayer(player, steps, onLand) {
+      if (steps <= 0) { onLand(); return; }
+      const fromIdx = player.position;
+      const toIdx   = Math.min(player.position + 1, BOARD.length - 1);
+      player.position = toIdx;
+      synthNav();
+      const plat = _platforms[toIdx];
+      if (plat) {
+        plat.material.emissive.setHex(0xffffff);
+        plat.material.emissiveIntensity = 0.6;
+        setTimeout(() => { plat.material.emissive.setHex(0x000000); plat.material.emissiveIntensity = 0; }, 250);
+      }
+      pointAt(toIdx);
+      const pm = _playerMeshes[player.id];
+      if (!pm) {
+        if (toIdx === BOARD.length - 1) { onLand(); return; }
+        setTimeout(() => Forest3D.movePlayer(player, steps - 1, onLand), 350);
+        return;
+      }
+      const from = _positions[fromIdx].clone(); from.y += 0.55;
+      const to   = _positions[toIdx].clone();   to.y   += 0.55;
+      const peak = from.clone().lerp(to, 0.5);  peak.y += 2.2;
+      const dur = 350, t0 = performance.now();
+      (function jump(now) {
+        const t  = Math.min((now - t0) / dur, 1);
+        const e  = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        const p1 = from.clone().lerp(peak, e);
+        const p2 = peak.clone().lerp(to,   e);
+        pm.mesh.position.copy(p1.lerp(p2, e));
+        pm.light.position.copy(pm.mesh.position);
+        const sy = t < 0.5 ? 1 + t * 0.5 : 1.25 - (t - 0.5) * 1.0;
+        pm.mesh.scale.set(t < 0.5 ? 0.88 : 1.05, Math.max(0.55, sy), t < 0.5 ? 0.88 : 1.05);
+        if (t < 1) {
+          requestAnimationFrame(jump);
+        } else {
+          pm.mesh.position.copy(to);
+          pm.mesh.scale.set(1, 1, 1);
+          pm.light.position.copy(to);
+          if (toIdx === BOARD.length - 1) { onLand(); }
+          else { Forest3D.movePlayer(player, steps - 1, onLand); }
+        }
+      })(performance.now());
+    },
+
+    focusOn(spaceIdx) {
+      pointAt(Math.max(0, Math.min(spaceIdx, BOARD.length - 1)));
+    },
+
+    destroy() {
+      if (_animId) { cancelAnimationFrame(_animId); _animId = null; }
+      if (_resizeObs) { _resizeObs.disconnect(); _resizeObs = null; }
+      _platforms = []; _playerMeshes = {}; _leaves = [];
+      _scene = null; _camera = null; _renderer = null;
+    },
+  };
+})();
 
 /* ═════════════════════════════════════════
    BOOT

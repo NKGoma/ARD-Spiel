@@ -377,7 +377,16 @@ html, body {
 /* ── Board Wrapper ── */
 .board-wrapper {
   flex: 1; position: relative;
-  overflow: hidden; padding: 5px;
+  overflow: hidden; padding: 0;
+}
+
+/* ── Three.js Forest Canvas ── */
+.three-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
 }
 .board-grid {
   display: grid;
