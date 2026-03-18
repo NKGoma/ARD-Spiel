@@ -60,6 +60,10 @@
           <span class="cp-label">ist dran</span>
         </div>
       </div>
+      <button class="wheel-trigger-btn" id="wheel-trigger-btn" onclick="Game.openWheel()" title="Zufalls-Event drehen!">
+        🎰
+        <span class="wheel-trigger-label">ZUFALLS-RAD</span>
+      </button>
       <button class="roll-btn" id="roll-btn" onclick="Game.roll()">
         <span class="roll-dice-face" id="roll-dice-face">🎲</span>
         <span class="roll-label">WÜRFELN!</span>
@@ -117,6 +121,21 @@
       <div class="duel-player-label duel-player-label--flipped" id="duel-defender-label"></div>
     </div>
   </section>
+
+  <!-- ══ Zufalls-Rad Overlay ══ -->
+  <div id="wheel-overlay" class="wheel-overlay">
+    <div class="wheel-modal">
+      <div class="wheel-title">🎰 Zufalls-Rad</div>
+      <div class="wheel-subtitle">Drehe das Rad – alles kann passieren!</div>
+      <div class="wheel-container">
+        <div class="wheel-pointer">▼</div>
+        <canvas id="wheel-canvas" width="300" height="300"></canvas>
+      </div>
+      <button id="wheel-spin-btn" class="wheel-spin-btn" onclick="Game.spinWheel()">DREHEN!</button>
+      <div id="wheel-result" class="wheel-result" style="display:none"></div>
+      <button id="wheel-close-btn" class="wheel-close-btn" style="display:none" onclick="Game.closeWheel()">Weiter ›</button>
+    </div>
+  </div>
 
   <!-- ══ ARD Event Overlay ══ -->
   <div id="event-overlay" class="event-overlay">
