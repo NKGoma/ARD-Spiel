@@ -8,37 +8,40 @@
 </head>
 <body>
 
-  <!-- ══ SCREEN 1: Cinematic Start ══ -->
+  <!-- ══ S1: Start ══ -->
   <section id="screen-start" class="screen active">
     <div id="particles" class="particles"></div>
     <div class="start-content">
-      <div class="ard-badge">ARD</div>
+      <div class="ard-logo-badge">ARD</div>
       <h1 class="start-title">ARD Life</h1>
       <p class="start-tagline">Sechs Welten. Unendliches Wissen.</p>
-      <button class="btn-explore" onclick="App.goMap()">Erkunde ›</button>
+      <p class="start-sub">Lerne · Entdecke · Wachse</p>
+      <button class="btn-explore" onclick="App.goMap()">Erkunde die Karte ›</button>
     </div>
   </section>
 
-  <!-- ══ SCREEN 2: RPG World Map ══ -->
+  <!-- ══ S2: RPG World Map ══ -->
   <section id="screen-map" class="screen">
     <div class="map-topbar">
-      <div class="pts-badge">⭐ <span id="map-points">0</span></div>
-      <div class="streak-badge" id="streak-badge">🔥 <span id="map-streak">0</span></div>
-      <button class="wheel-pill" onclick="App.goWheel()">Wheel ○</button>
+      <div class="ard-logo-badge ard-logo-badge--sm">ARD</div>
+      <div class="map-topbar-center">ARD Life</div>
+      <div class="map-topbar-right">
+        <div class="pts-badge">⭐ <span id="map-points">0</span></div>
+        <button class="wheel-pill" onclick="App.goWheel()">◎</button>
+      </div>
     </div>
 
     <div class="map-world" id="map-world">
-      <div id="map-stars"  class="map-stars"></div>
-      <div id="map-glows"  class="map-glows"></div>
-      <svg id="map-paths"  class="map-paths" xmlns="http://www.w3.org/2000/svg"></svg>
-      <div id="map-nodes"  class="map-nodes"></div>
-      <div id="player"     class="player">
+      <div id="map-stars" class="map-stars"></div>
+      <div id="map-glows" class="map-glows"></div>
+      <svg id="map-paths" class="map-paths" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="map-nodes" class="map-nodes"></div>
+      <div id="player" class="player">
         <div class="player-sprite">🧙</div>
         <div class="player-shadow"></div>
       </div>
     </div>
 
-    <!-- Mission HUD – slides up from bottom -->
     <div id="mission-hud" class="mission-hud">
       <div class="mission-top">
         <span class="mission-kicker">MISSION BRIEF</span>
@@ -55,43 +58,94 @@
     </div>
   </section>
 
-  <!-- ══ SCREEN 3: Quiz ══ -->
+  <!-- ══ S3: Battle / Quiz ══ -->
   <section id="screen-quiz" class="screen">
-    <header class="quiz-header">
-      <button class="back-btn" onclick="App.goMap()">←</button>
-      <span id="quiz-cat-name" class="quiz-cat-name"></span>
+
+    <!-- Topbar -->
+    <header class="battle-topbar">
+      <button class="back-btn" onclick="App.abandonRun()">←</button>
+      <div class="battle-world-info">
+        <div class="ard-logo-badge ard-logo-badge--xs">ARD</div>
+        <span id="battle-world-name" class="battle-world-name"></span>
+      </div>
       <div class="pts-badge">⭐ <span id="quiz-points">0</span></div>
     </header>
-    <div class="quiz-body">
-      <p id="quiz-source" class="quiz-source"></p>
-      <h2 id="quiz-question" class="quiz-question"></h2>
-      <div id="quiz-options" class="quiz-options"></div>
+
+    <!-- Level progress pips -->
+    <div class="level-track-row">
+      <span class="level-track-label" id="level-track-label">LEVEL 1 / 5</span>
+      <div class="level-pips" id="level-pips">
+        <div class="pip"></div><div class="pip"></div><div class="pip"></div>
+        <div class="pip"></div><div class="pip"></div>
+      </div>
     </div>
+
+    <!-- ARD Content card (the "opponent") -->
+    <div class="content-card" id="content-card">
+      <div class="content-card-inner">
+        <div class="content-ard-badge">ARD</div>
+        <div class="content-info">
+          <p class="content-title" id="quiz-source"></p>
+          <a class="content-link" id="content-link"
+             href="https://www.ardmediathek.de" target="_blank" rel="noopener">
+            ardmediathek.de →
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Question -->
+    <div class="question-wrap">
+      <h2 id="quiz-question" class="quiz-question"></h2>
+    </div>
+
+    <!-- Options -->
+    <div id="quiz-options" class="quiz-options"></div>
+
   </section>
 
-  <!-- ══ SCREEN 4: Feedback ══ -->
+  <!-- ══ S4: Feedback ══ -->
   <section id="screen-feedback" class="screen">
     <div class="feedback-inner">
-      <div id="fb-icon"          class="fb-icon"></div>
+      <div id="fb-icon" class="fb-icon"></div>
       <h2  id="fb-result"        class="fb-result"></h2>
       <p   id="fb-correct-label" class="fb-correct-label"></p>
       <div class="insight-card">
         <div class="insight-bar" id="insight-bar"></div>
         <p id="fb-insight"></p>
       </div>
-      <a id="fb-link" class="ard-pill" href="#" target="_blank" rel="noopener">
+      <a id="fb-link" class="ard-pill"
+         href="https://www.ardmediathek.de" target="_blank" rel="noopener">
         ARD Inhalt ansehen →
       </a>
-      <button class="btn-weiter" onclick="App.goMap()">Weiter →</button>
+      <button class="btn-weiter" id="btn-weiter" onclick="App.weiterAction()">
+        Weiter →
+      </button>
     </div>
     <div class="point-float" id="point-float">+1 ⭐</div>
   </section>
 
-  <!-- ══ SCREEN 5: Wheel of Life ══ -->
+  <!-- ══ S5: World Complete ══ -->
+  <section id="screen-complete" class="screen">
+    <div class="complete-bg" id="complete-bg"></div>
+    <div class="complete-inner">
+      <div class="complete-trophy" id="complete-trophy">🏆</div>
+      <h2 class="complete-title" id="complete-title">Welt gemeistert!</h2>
+      <div class="complete-stars" id="complete-stars"></div>
+      <p  class="complete-fraction" id="complete-fraction">5 / 5 Richtig</p>
+      <div class="complete-unlocks" id="complete-unlocks"></div>
+      <button class="btn-back-map" onclick="App.goMap()">→ Zur Karte</button>
+    </div>
+  </section>
+
+  <!-- ══ S6: Wheel of Life ══ -->
   <section id="screen-wheel" class="screen">
     <header class="wheel-header">
       <button class="back-btn back-btn--light" onclick="App.goMap()">←</button>
-      <h2 class="wheel-title">Wheel of Life</h2>
+      <div class="wheel-header-title">
+        <div class="ard-logo-badge ard-logo-badge--xs">ARD</div>
+        <span>Wheel of Life</span>
+      </div>
       <div class="pts-badge pts-badge--gold">⭐ <span id="wheel-points">0</span></div>
     </header>
     <div class="wheel-wrap">
