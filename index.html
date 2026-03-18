@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>ARD Life – Das Wissensduell</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ══ S1: Start ══ -->
+  <section id="screen-start" class="screen active">
+    <div id="particles" class="particles"></div>
+    <div class="start-content">
+      <div class="ard-logo-badge">ARD</div>
+      <h1 class="start-title">ARD Life</h1>
+      <p class="start-tagline">Das Wissensduell</p>
+      <p class="start-sub">2–4 Spieler · Stehle Punkte · Werde Champion</p>
+      <button class="btn-explore" onclick="Game.goSetup()">Neues Spiel ›</button>
+    </div>
+  </section>
+
+  <!-- ══ S2: Player Setup ══ -->
+  <section id="screen-setup" class="screen">
+    <header class="setup-header">
+      <button class="back-btn" onclick="Game.goStart()">←</button>
+      <div class="setup-header-title">
+        <div class="ard-logo-badge ard-logo-badge--xs">ARD</div>
+        <span>Spieler einrichten</span>
+      </div>
+      <div style="width:36px"></div>
+    </header>
+    <div class="setup-body" id="setup-body">
+      <!-- rendered by JS -->
+    </div>
+    <div class="setup-footer">
+      <button class="btn-start-game" id="btn-start-game" onclick="Game.startGame()">Los geht's! 🎲</button>
+    </div>
+  </section>
+
+  <!-- ══ S3: Game Board ══ -->
+  <section id="screen-board" class="screen">
+    <div class="score-strip" id="score-strip"></div>
+    <div class="board-wrapper" id="board-wrapper">
+      <div class="board-grid" id="board-grid"></div>
+      <div class="token-layer" id="token-layer"></div>
+    </div>
+    <div class="board-legend">
+      <span class="legend-pill">🧠 Frage</span>
+      <span class="legend-pill legend-pill--bonus">⭐ Bonus</span>
+      <span class="legend-pill legend-pill--duel">⚔️ Duell</span>
+      <span class="legend-pill legend-pill--event">📺 Event</span>
+      <span class="legend-pill legend-pill--end">🏆 Ziel</span>
+    </div>
+    <div class="turn-controls" id="turn-controls">
+      <div class="current-player-info" id="current-player-info">
+        <span class="cp-avatar" id="cp-avatar"></span>
+        <div class="cp-text">
+          <span class="cp-name" id="cp-name"></span>
+          <span class="cp-label">ist dran</span>
+        </div>
+      </div>
+      <button class="roll-btn" id="roll-btn" onclick="Game.roll()">
+        <span class="roll-dice-face" id="roll-dice-face">🎲</span>
+        <span class="roll-label">WÜRFELN!</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ══ S3b: Handoff Screen (pass-and-play) ══ -->
+  <section id="screen-handoff" class="screen" onclick="Game.dismissHandoff()">
+    <div class="handoff-content">
+      <div class="handoff-avatar" id="ho-avatar"></div>
+      <div class="handoff-name"   id="ho-name"></div>
+      <div class="handoff-label">IST DRAN!</div>
+      <div class="handoff-cta">TIPPE UM ZU SPIELEN ›</div>
+    </div>
+  </section>
+
+  <!-- ══ Question Bottom Sheet (slides over board) ══ -->
+  <div id="question-sheet" class="question-sheet">
+    <div class="qs-handle"></div>
+    <div class="qs-header">
+      <div class="qs-player-tag" id="qs-player-tag"></div>
+      <div class="qs-category-tag" id="qs-category-tag"></div>
+      <div class="qs-pts-tag" id="qs-pts-tag">+2 ⭐</div>
+    </div>
+    <div class="qs-timer-wrap"><div class="qs-timer-bar" id="qs-timer-bar"></div></div>
+    <div class="qs-source" id="qs-source"></div>
+    <h2 class="qs-question" id="qs-question"></h2>
+    <div class="qs-options" id="qs-options"></div>
+  </div>
+
+  <!-- ══ Duel Target Picker (overlay) ══ -->
+  <div id="target-overlay" class="target-overlay">
+    <div class="to-inner">
+      <div class="to-title">⚔️ Wen willst du herausfordern?</div>
+      <div class="to-sub">Wähle einen Gegner!</div>
+      <div class="to-list" id="to-list"></div>
+    </div>
+  </div>
+
+  <!-- ══ S4: Duel Screen ══ -->
+  <section id="screen-duel" class="screen">
+    <div class="duel-top" id="duel-top">
+      <div class="duel-player-label" id="duel-challenger-label"></div>
+      <div class="duel-opts" id="duel-challenger-opts"></div>
+    </div>
+    <div class="duel-center-band">
+      <span class="duel-vs-icon">⚔️</span>
+      <div class="duel-question-text" id="duel-question-text"></div>
+      <div class="duel-timer-wrap"><div class="duel-timer-bar" id="duel-timer-bar"></div></div>
+      <span class="duel-vs-icon">⚔️</span>
+    </div>
+    <div class="duel-bottom" id="duel-bottom">
+      <div class="duel-opts duel-opts--flipped" id="duel-defender-opts"></div>
+      <div class="duel-player-label duel-player-label--flipped" id="duel-defender-label"></div>
+    </div>
+  </section>
+
+  <!-- ══ ARD Event Overlay ══ -->
+  <div id="event-overlay" class="event-overlay">
+    <div class="eo-card" id="eo-card">
+      <div class="eo-kicker">📺 ARD MOMENT</div>
+      <div class="eo-emoji" id="eo-emoji"></div>
+      <div class="eo-title" id="eo-title"></div>
+      <div class="eo-desc"  id="eo-desc"></div>
+    </div>
+  </div>
+
+  <!-- ══ S5: Winner Screen ══ -->
+  <section id="screen-winner" class="screen">
+    <div id="winner-particles" class="particles"></div>
+    <div class="winner-inner">
+      <div class="winner-headline">🏆 Spielende!</div>
+      <div class="winner-podium" id="winner-podium"></div>
+      <div class="winner-life-awards" id="winner-life-awards"></div>
+      <div class="winner-btns">
+        <button class="btn-rematch" onclick="Game.rematch()">Nochmal! 🔄</button>
+        <button class="btn-new-game" onclick="Game.goSetup()">Neue Spieler</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ Global overlays (reused from previous version) ══ -->
+  <div id="narrator" class="narrator-box"><span id="narrator-text"></span></div>
+  <div id="screen-flash" class="screen-flash"></div>
+  <div id="screen-crack" class="screen-crack"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
