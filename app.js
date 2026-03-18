@@ -6,6 +6,273 @@
 const LETTERS    = ['A', 'B', 'C'];
 const RUN_LENGTH = 5; // questions per world run
 
+/* ═════════════════════════════════════════
+   WEB AUDIO ENGINE  (zero file dependencies)
+═════════════════════════════════════════ */
+let _audioCtx = null;
+let _muted    = false;
+
+function getAudioCtx() {
+  if (!_audioCtx) {
+    try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+  return _audioCtx;
+}
+
+function playTone(freq, type, duration, gain = 0.3, startDelay = 0) {
+  if (_muted) return;
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  try {
+    const osc = ctx.createOscillator();
+    const vol = ctx.createGain();
+    osc.connect(vol);
+    vol.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.value = freq;
+    const t = ctx.currentTime + startDelay;
+    vol.gain.setValueAtTime(0, t);
+    vol.gain.linearRampToValueAtTime(gain, t + 0.012);
+    vol.gain.exponentialRampToValueAtTime(0.001, t + duration);
+    osc.start(t);
+    osc.stop(t + duration + 0.05);
+  } catch(e) {}
+}
+
+function synthCorrect() {
+  [523, 659, 784].forEach((f, i) => playTone(f, 'sine', 0.2, 0.22, i * 0.08));
+}
+function synthWrong() {
+  playTone(330, 'sawtooth', 0.25, 0.14, 0);
+  playTone(247, 'sawtooth', 0.3,  0.12, 0.12);
+}
+function synthStreak3() {
+  [523, 659, 784, 1047].forEach((f, i) => playTone(f, 'square', 0.18, 0.14, i * 0.07));
+}
+function synthStreak5() {
+  [523, 659, 784, 1047].forEach((f, i) => playTone(f, 'sine', 0.35, 0.2, i * 0.09));
+  playTone(220, 'sawtooth', 0.5, 0.07, 0);
+}
+function synthStreak7() {
+  [261, 329, 392, 523, 659, 784, 1047].forEach((f, i) =>
+    playTone(f, 'sine', 0.5, 0.18, i * 0.07)
+  );
+}
+function synthUnlock() {
+  [523, 587, 659, 784].forEach((f, i) => playTone(f, 'sine', 0.35, 0.28, i * 0.12));
+  setTimeout(() => [784, 880, 1047].forEach((f, i) => playTone(f, 'sine', 0.4, 0.22, i * 0.1)), 520);
+}
+function synthBoss() {
+  playTone(110, 'sawtooth', 0.7, 0.3, 0);
+  playTone(55,  'sine',     0.9, 0.35, 0.1);
+  playTone(73,  'square',   0.4, 0.12, 0.35);
+}
+function synthTick() {
+  playTone(1400, 'square', 0.018, 0.035);
+}
+function synthNav() {
+  playTone(440, 'sine', 0.12, 0.1, 0);
+  playTone(660, 'sine', 0.1,  0.08, 0.07);
+}
+function synthStreakBreak() {
+  [440, 330, 220].forEach((f, i) => playTone(f, 'sawtooth', 0.28, 0.16, i * 0.1));
+}
+
+function toggleMute() {
+  _muted = !_muted;
+  document.querySelectorAll('.mute-btn').forEach(b => { b.textContent = _muted ? '🔇' : '🔊'; });
+}
+
+/* ═════════════════════════════════════════
+   NARRATOR VOICE BOX
+═════════════════════════════════════════ */
+let _narratorTimer = null;
+
+function showNarrator(text, duration = 2500) {
+  const box = document.getElementById('narrator');
+  if (!box) return;
+  document.getElementById('narrator-text').textContent = text;
+  box.classList.remove('narrator-exit');
+  box.classList.add('narrator-active');
+  clearTimeout(_narratorTimer);
+  _narratorTimer = setTimeout(() => {
+    box.classList.add('narrator-exit');
+    setTimeout(() => box.classList.remove('narrator-active', 'narrator-exit'), 500);
+  }, duration);
+}
+
+/* ═════════════════════════════════════════
+   COMBO EXPLOSION SYSTEM
+═════════════════════════════════════════ */
+function triggerComboExplosion(streak) {
+  const el = document.createElement('div');
+  el.className = 'combo-explosion';
+  if (streak >= 7) {
+    el.textContent = 'LEGENDÄR! ⭐';
+    el.classList.add('combo-legendary');
+    spawnStarRain();
+    synthStreak7();
+  } else if (streak >= 5) {
+    el.textContent = 'FEUER! 🔥';
+    el.classList.add('combo-fire');
+    spawnFireRain();
+    synthStreak5();
+  } else {
+    el.textContent = `COMBO ×${streak}!`;
+    el.classList.add('combo-normal');
+    synthStreak3();
+  }
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1500);
+}
+
+function spawnFireRain() {
+  const colors = ['#ff4500','#ff6b00','#ffd700','#ff2200','#ff8c00'];
+  for (let i = 0; i < 28; i++) {
+    const p = document.createElement('div');
+    p.className = 'rain-particle fire-particle';
+    p.style.cssText = `
+      left:${Math.random()*100}%;top:-8px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      width:${3+Math.random()*5}px;height:${3+Math.random()*5}px;
+      animation-delay:${(Math.random()*0.5).toFixed(2)}s;
+      animation-duration:${(0.55+Math.random()*0.55).toFixed(2)}s;
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1300);
+  }
+  const tint = document.createElement('div');
+  tint.className = 'screen-tint fire-tint';
+  document.body.appendChild(tint);
+  setTimeout(() => tint.remove(), 1000);
+}
+
+function spawnStarRain() {
+  for (let i = 0; i < 36; i++) {
+    const p = document.createElement('div');
+    p.className = 'rain-particle star-particle';
+    p.textContent = Math.random() > 0.5 ? '⭐' : '✨';
+    p.style.cssText = `
+      left:${Math.random()*100}%;top:-20px;
+      font-size:${10+Math.random()*16}px;
+      animation-delay:${(Math.random()*0.8).toFixed(2)}s;
+      animation-duration:${(0.7+Math.random()*0.8).toFixed(2)}s;
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1800);
+  }
+  const flash = document.createElement('div');
+  flash.className = 'screen-tint legendary-flash';
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 700);
+}
+
+/* ═════════════════════════════════════════
+   BOSS QUESTION SYSTEM
+═════════════════════════════════════════ */
+function showBossWarning(callback) {
+  const el = document.getElementById('boss-warning');
+  if (!el) { callback(); return; }
+  synthBoss();
+  el.classList.add('boss-active');
+  setTimeout(() => {
+    el.classList.add('boss-fadeout');
+    setTimeout(() => { el.classList.remove('boss-active','boss-fadeout'); callback(); }, 450);
+  }, 1600);
+}
+
+function startBossTimer() {
+  const wrap = document.getElementById('boss-timer-wrap');
+  const bar  = document.getElementById('boss-timer-bar');
+  if (!wrap || !bar) return;
+  wrap.style.display = 'flex';
+  bar.style.animation = 'none';
+  void bar.offsetWidth;
+  bar.style.animation = 'timerCountdown 20s linear forwards';
+}
+
+function hideBossTimer() {
+  const wrap = document.getElementById('boss-timer-wrap');
+  if (wrap) wrap.style.display = 'none';
+}
+
+/* ═════════════════════════════════════════
+   SCREEN CRACK
+═════════════════════════════════════════ */
+function showScreenCrack() {
+  const el = document.getElementById('screen-crack');
+  if (!el) return;
+  el.classList.remove('crack-active');
+  void el.offsetWidth;
+  el.classList.add('crack-active');
+  setTimeout(() => el.classList.remove('crack-active'), 750);
+}
+
+/* ═════════════════════════════════════════
+   STREAK BREAK DRAMA
+═════════════════════════════════════════ */
+function showStreakBreakDrama(lostStreak) {
+  if (lostStreak < 3) return;
+  synthStreakBreak();
+  const el = document.createElement('div');
+  el.className = 'streak-broken-text';
+  el.textContent = `STREAK ×${lostStreak} GEBROCHEN!`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1300);
+  showNarrator('Autsch! Der Streak ist gebrochen... Kopf hoch! 💪', 2200);
+}
+
+/* ═════════════════════════════════════════
+   LIVING MAP
+═════════════════════════════════════════ */
+function addMapClouds() {
+  const mapWorld = document.getElementById('map-world');
+  if (!mapWorld || document.getElementById('map-clouds')) return;
+  const cc = document.createElement('div');
+  cc.id = 'map-clouds';
+  cc.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden;';
+  [
+    { top:'6%',  size:55, dur:48, delay:0,   opacity:0.055 },
+    { top:'21%', size:85, dur:65, delay:-22, opacity:0.04  },
+    { top:'47%', size:65, dur:52, delay:-12, opacity:0.05  },
+  ].forEach(c => {
+    const cloud = document.createElement('div');
+    cloud.className = 'map-cloud';
+    cloud.style.cssText = `top:${c.top};width:${c.size*2.2}px;height:${c.size}px;opacity:${c.opacity};animation:cloudDrift ${c.dur}s ${c.delay}s linear infinite;`;
+    cc.appendChild(cloud);
+  });
+  mapWorld.insertBefore(cc, mapWorld.firstChild);
+}
+
+let _pendingUnlockAnimations = [];
+
+function animateMapUnlock(catId) {
+  const cat = DATA.categories.find(c => c.id === catId);
+  if (!cat) return;
+  document.querySelectorAll('.map-node').forEach(node => {
+    const label = node.querySelector('.node-label');
+    if (label && label.textContent === cat.label) {
+      node.classList.add('node-awakening');
+      setTimeout(() => node.classList.remove('node-awakening'), 3500);
+    }
+  });
+}
+
+function addPlayerSparkleTrail() {
+  const player = document.getElementById('player');
+  if (!player) return;
+  const rect = player.getBoundingClientRect();
+  for (let i = 0; i < 5; i++) {
+    const p = document.createElement('div');
+    p.className = 'player-trail';
+    p.style.left = (rect.left + rect.width/2  + (Math.random()-0.5)*12) + 'px';
+    p.style.top  = (rect.top  + rect.height/2 + (Math.random()-0.5)*12) + 'px';
+    p.style.animationDelay = (i * 0.06) + 's';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 900);
+  }
+}
+
 /* ─────────────────────────────────────────
    World themes
 ───────────────────────────────────────── */
@@ -288,6 +555,7 @@ function typewriterQuestion(text, onComplete) {
     if (i >= text.length) { finish(); return; }
     el.textContent = text.slice(0, ++i);
     el.appendChild(cursor); // keep cursor at end
+    if (i % 3 === 0) synthTick(); // soft tick every 3 chars
   }, CHAR_DELAY);
 }
 
@@ -413,6 +681,7 @@ function renderMap() {
   renderMissionHUD();
   setupKeyboard();
   setupSwipe();
+  addMapClouds();
 }
 
 function generateStars() {
@@ -540,6 +809,8 @@ function movePlayerTo(catId) {
     if (isUnlocked(catId)) startRun(catId);
     return;
   }
+  addPlayerSparkleTrail();
+  synthNav();
   currentMapNode = catId;
   renderNodes();
   positionPlayer(true);
@@ -646,9 +917,13 @@ function startRun(catId) {
   currentRun = { catId, questions, levelIdx: 0, correct: 0, results: [] };
   applyWorldTheme(w);
 
-  // Battle intro → then show quiz
+  // Init audio context on user gesture
+  getAudioCtx();
+
+  // Battle intro → narrator → quiz
   battleIntro(catId, () => {
     createAmbientElements(catId);
+    showNarrator('Das Abenteuer beginnt! Zeig, was du weißt... 🗡️', 2200);
     showQuizLevel();
   });
 }
@@ -690,20 +965,37 @@ function showQuizLevel() {
     optsEl.appendChild(btn);
   });
 
+  const isBoss = levelIdx === RUN_LENGTH - 1;
+
   showScreen('screen-quiz');
 
-  /* typewriter question — reveals options when done */
-  typewriterQuestion(q.question, () => {
-    optsEl.classList.remove('hidden');
-    // cascade animation on buttons
-    optsEl.querySelectorAll('.option-btn').forEach((btn, i) => {
-      btn.style.opacity         = '0';
-      btn.style.animation       = 'none';
-      void btn.offsetWidth;
-      btn.style.animation       = 'optionIn 0.32s ease forwards';
-      btn.style.animationDelay  = `${i * 80}ms`;
+  const doTypewriter = () => {
+    if (isBoss) {
+      showNarrator('Die entscheidende Frage... jetzt oder nie! ⚔️', 2200);
+      document.getElementById('screen-quiz').classList.add('boss-mode');
+      startBossTimer();
+    } else {
+      document.getElementById('screen-quiz').classList.remove('boss-mode');
+      hideBossTimer();
+    }
+
+    typewriterQuestion(q.question, () => {
+      optsEl.classList.remove('hidden');
+      optsEl.querySelectorAll('.option-btn').forEach((btn, i) => {
+        btn.style.opacity        = '0';
+        btn.style.animation      = 'none';
+        void btn.offsetWidth;
+        btn.style.animation      = 'optionIn 0.32s ease forwards';
+        btn.style.animationDelay = `${i * 80}ms`;
+      });
     });
-  });
+  };
+
+  if (isBoss) {
+    showBossWarning(doTypewriter);
+  } else {
+    doTypewriter();
+  }
 }
 
 function updatePips() {
@@ -734,8 +1026,12 @@ function submitAnswer(selectedIndex, clickedBtn) {
 }
 
 function revealAnswer(selectedIndex, clickedBtn) {
-  const q       = currentRun.questions[currentRun.levelIdx];
-  const correct = selectedIndex === q.correctIndex;
+  const q          = currentRun.questions[currentRun.levelIdx];
+  const correct    = selectedIndex === q.correctIndex;
+  const prevStreak = state.streak;
+  const isBoss     = currentRun.levelIdx === RUN_LENGTH - 1;
+
+  hideBossTimer();
 
   document.querySelectorAll('.option-btn')[q.correctIndex].classList.add('correct');
   if (!correct) clickedBtn.classList.add('wrong');
@@ -748,12 +1044,45 @@ function revealAnswer(selectedIndex, clickedBtn) {
     if (state.streak > state.maxStreak) state.maxStreak = state.streak;
     if (state.streak % 3 === 0) state.points += 1; // combo bonus
     currentRun.correct += 1;
+
     flashScreen('correct');
     createSparkles(clickedBtn);
+    synthCorrect();
+    if (navigator.vibrate) navigator.vibrate(50);
+
+    // Combo explosion at milestones
+    if (state.streak === 3 || state.streak === 5 || state.streak === 7 ||
+        (state.streak > 7 && state.streak % 2 === 0)) {
+      triggerComboExplosion(state.streak);
+    }
+
+    // Narrator for streak milestones (only first time each level)
+    if (state.streak === 3) {
+      showNarrator('Unaufhaltbar! Du bist im Feuer! 🔥', 2000);
+    } else if (state.streak === 5) {
+      showNarrator('LEGENDÄR! Absolut unschlagbar! ⭐', 2200);
+    } else if (state.streak === 10) {
+      showNarrator('ZEH IN EINER REIHE! Du bist ein Gott! 🌟', 2500);
+    }
+
+    if (isBoss) {
+      setTimeout(() => showNarrator('BOSS besiegt! Außergewöhnlich! 🏆', 2500), 400);
+    }
   } else {
+    showStreakBreakDrama(prevStreak);
     state.streak = 0;
     flashScreen('wrong');
     shakeScreen();
+    synthWrong();
+    if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
+
+    // Screen crack when HP is low
+    const hpPct = ((RUN_LENGTH - currentRun.levelIdx) / RUN_LENGTH) * 100;
+    if (hpPct <= 40) showScreenCrack();
+
+    if (isBoss) {
+      setTimeout(() => showNarrator('So nah dran... Beim nächsten Mal! 💪', 2200), 400);
+    }
   }
 
   if (!state.seen.includes(q.id)) state.seen.push(q.id);
@@ -847,6 +1176,10 @@ function finishRun() {
   });
 
   clearAmbient();
+
+  // Store unlocks for map animation
+  _pendingUnlockAnimations = newUnlocks.map(c => c.id);
+
   showCompletion(correct, newUnlocks, w);
 }
 
@@ -901,6 +1234,26 @@ function showCompletion(correct, newUnlocks, w) {
   // Confetti for decent scores
   if (correct >= 3) {
     setTimeout(() => launchConfetti(w), 350);
+  }
+
+  // Narrator for run result
+  if (correct === 5) {
+    setTimeout(() => {
+      synthUnlock();
+      showNarrator('PERFEKTION. Außergewöhnlich. Du bist unaufhaltbar! 🌟', 3000);
+    }, 600);
+  } else if (correct === 0) {
+    setTimeout(() => showNarrator('Manchmal muss man fallen, um zu fliegen. Nochmal! 💪', 2500), 600);
+  } else if (correct >= 4) {
+    setTimeout(() => showNarrator('Fast perfekt! Beeindruckend. 🌟', 2000), 600);
+  }
+
+  // Unlock narrator
+  if (newUnlocks.length > 0) {
+    setTimeout(() => {
+      synthUnlock();
+      showNarrator('Eine neue Welt öffnet sich vor dir! ✨', 2800);
+    }, 1200);
   }
 }
 
@@ -1073,6 +1426,14 @@ const App = {
     renderMap();
     showScreen('screen-map');
     requestAnimationFrame(() => { renderPaths(); positionPlayer(false); });
+
+    // Fire pending unlock animations
+    if (_pendingUnlockAnimations.length > 0) {
+      setTimeout(() => {
+        _pendingUnlockAnimations.forEach(catId => animateMapUnlock(catId));
+        _pendingUnlockAnimations = [];
+      }, 700);
+    }
   },
 
   goWheel() {

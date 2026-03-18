@@ -1022,3 +1022,342 @@ html, body {
   transition: border-color 0.2s, color 0.2s;
 }
 .reset-btn:hover { border-color: rgba(0,100,255,0.4); color: rgba(100,160,255,0.65); }
+
+/* ════════════════════════════════════════
+   EMOTIONAL ENGINE – New Overlays
+════════════════════════════════════════ */
+
+/* ── Mute Button ── */
+.mute-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.55);
+  font-size: 15px;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.mute-btn:hover { background: rgba(255,255,255,0.14); }
+
+/* ── Narrator Voice Box ── */
+.narrator-box {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(120%);
+  z-index: 8000;
+  background: rgba(8, 8, 20, 0.92);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 14px;
+  padding: 12px 22px;
+  max-width: 340px;
+  width: calc(100% - 40px);
+  text-align: center;
+  pointer-events: none;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+  transition: transform 0.4s cubic-bezier(0.34,1.3,0.64,1), opacity 0.4s ease;
+  opacity: 0;
+}
+.narrator-box.narrator-active {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+.narrator-box.narrator-exit {
+  transform: translateX(-50%) translateY(20px);
+  opacity: 0;
+  transition: transform 0.4s ease, opacity 0.35s ease;
+}
+#narrator-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.88);
+  line-height: 1.5;
+  letter-spacing: 0.2px;
+}
+
+/* ── Boss Warning Overlay ── */
+.boss-warning {
+  position: fixed;
+  inset: 0;
+  z-index: 7000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(0,0,0,0.92);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.boss-warning.boss-active {
+  opacity: 1;
+  pointer-events: all;
+}
+.boss-warning.boss-fadeout {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.boss-warning-icon {
+  font-size: 64px;
+  animation: bossIconPop 0.6s 0.1s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+.boss-warning.boss-active .boss-warning-icon {
+  filter: drop-shadow(0 0 30px rgba(255,100,0,0.8));
+}
+@keyframes bossIconPop {
+  from { transform: scale(0.2) rotate(-20deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg);     opacity: 1; }
+}
+.boss-warning-text {
+  font-size: clamp(36px, 9vw, 56px);
+  font-weight: 900;
+  color: #ff6b00;
+  letter-spacing: 2px;
+  opacity: 0;
+  text-shadow: 0 0 40px rgba(255,100,0,0.7);
+}
+.boss-warning.boss-active .boss-warning-text {
+  animation: bossTextIn 0.5s 0.3s cubic-bezier(0.34,1.4,0.64,1) forwards;
+}
+@keyframes bossTextIn {
+  from { opacity: 0; transform: scale(1.5); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.boss-warning-sub {
+  font-size: 14px;
+  color: rgba(255,200,100,0.7);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 700;
+  opacity: 0;
+}
+.boss-warning.boss-active .boss-warning-sub {
+  animation: biFadeIn 0.4s 0.6s ease forwards;
+}
+
+/* ── Boss Timer Bar ── */
+.boss-timer-wrap {
+  flex-shrink: 0;
+  height: 24px;
+  background: rgba(255,100,0,0.08);
+  border-bottom: 1px solid rgba(255,100,0,0.2);
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+.boss-timer-bar {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 100%;
+  background: linear-gradient(90deg, #ff4500, #ff8c00, #ffd700);
+  animation: timerCountdown 20s linear forwards;
+  box-shadow: 0 0 8px rgba(255,100,0,0.5);
+}
+@keyframes timerCountdown {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
+.boss-timer-label {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: rgba(255,180,100,0.8);
+  z-index: 1;
+}
+
+/* ── Screen Crack ── */
+.screen-crack {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9500;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 50% 45%,
+      transparent 0%,
+      transparent 25%,
+      rgba(255,50,50,0.12) 26%,
+      transparent 27%),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 48%,
+      rgba(255,50,50,0.08) 49%,
+      transparent 50%
+    ),
+    repeating-linear-gradient(
+      25deg,
+      transparent,
+      transparent 43%,
+      rgba(255,70,70,0.07) 44%,
+      transparent 45%
+    );
+}
+.screen-crack.crack-active {
+  animation: crackAppear 0.7s ease forwards;
+}
+@keyframes crackAppear {
+  0%   { opacity: 0; }
+  15%  { opacity: 1; }
+  70%  { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
+/* ── Combo Explosion Text ── */
+.combo-explosion {
+  position: fixed;
+  top: 35%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9800;
+  pointer-events: none;
+  font-size: clamp(32px, 8vw, 52px);
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-align: center;
+  white-space: nowrap;
+  animation: comboExplode 1.4s cubic-bezier(0.175,0.885,0.32,1.275) forwards;
+}
+@keyframes comboExplode {
+  0%   { opacity: 0; transform: translateX(-50%) scale(0.3); filter: blur(4px); }
+  20%  { opacity: 1; transform: translateX(-50%) scale(1.2); filter: blur(0); }
+  50%  { opacity: 1; transform: translateX(-50%) scale(1); }
+  80%  { opacity: 0.8; transform: translateX(-50%) scale(1); }
+  100% { opacity: 0; transform: translateX(-50%) scale(0.8) translateY(-30px); }
+}
+.combo-normal {
+  color: #ffd700;
+  text-shadow: 0 0 30px rgba(255,215,0,0.8), 0 0 60px rgba(255,200,0,0.4);
+}
+.combo-fire {
+  color: #ff6b00;
+  text-shadow: 0 0 30px rgba(255,100,0,0.9), 0 0 60px rgba(255,50,0,0.5);
+}
+.combo-legendary {
+  color: #fff;
+  text-shadow: 0 0 30px rgba(200,180,255,1), 0 0 60px rgba(180,100,255,0.7), 0 0 100px rgba(100,50,255,0.4);
+}
+
+/* ── Rain Particles (fire / star) ── */
+.rain-particle {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9700;
+  border-radius: 50%;
+  animation: rainFall linear forwards;
+}
+@keyframes rainFall {
+  0%   { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  80%  { opacity: 0.8; }
+  100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+}
+.fire-particle { border-radius: 50%; }
+.star-particle {
+  background: none !important;
+  border-radius: 0;
+  font-size: 14px;
+}
+
+/* ── Screen Tint (fire / legendary) ── */
+.screen-tint {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9600;
+  animation: tintFlash 0.9s ease forwards;
+}
+@keyframes tintFlash {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+.fire-tint { background: rgba(255,80,0,0.18); }
+.legendary-flash { background: rgba(255,255,255,0.25); animation-duration: 0.6s; }
+
+/* ── Streak Broken Text ── */
+.streak-broken-text {
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9800;
+  pointer-events: none;
+  font-size: clamp(18px, 5vw, 28px);
+  font-weight: 900;
+  color: #ef5350;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  text-shadow: 0 0 20px rgba(239,83,80,0.8);
+  animation: streakBreakAnim 1.2s ease forwards;
+}
+@keyframes streakBreakAnim {
+  0%   { opacity: 0; transform: translateX(-50%) scale(0.6); }
+  20%  { opacity: 1; transform: translateX(-50%) scale(1.1); }
+  50%  { opacity: 1; transform: translateX(-50%) scale(1); }
+  100% { opacity: 0; transform: translateX(-50%) scale(0.8) translateY(-20px); }
+}
+
+/* ── Living Map: Clouds ── */
+.map-cloud {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 40% 40%, rgba(255,255,255,0.9), rgba(255,255,255,0.2));
+  filter: blur(18px);
+  animation: cloudDrift linear infinite;
+}
+@keyframes cloudDrift {
+  0%   { transform: translateX(-220px); }
+  100% { transform: translateX(calc(100vw + 220px)); }
+}
+
+/* ── Player Trail Sparkles ── */
+.player-trail {
+  position: fixed;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(200,180,255,0.8);
+  pointer-events: none;
+  z-index: 9;
+  animation: trailFade 0.8s ease forwards;
+  transform: translate(-50%, -50%);
+}
+@keyframes trailFade {
+  0%   { opacity: 0.9; transform: translate(-50%,-50%) scale(1); }
+  100% { opacity: 0;   transform: translate(-50%,-50%) scale(0.2) translateY(-12px); }
+}
+
+/* ── Awakening Ring (new unlock) ── */
+.node-awakening .node-ring::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 3px solid var(--node-glow, #ffd700);
+  animation: awakeningRing 0.8s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes awakeningRing {
+  0%   { transform: scale(1);   opacity: 0.9; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+/* ── Boss Mode Quiz Screen ── */
+#screen-quiz.boss-mode .content-card {
+  border-color: rgba(255,100,0,0.35) !important;
+  box-shadow: 0 0 20px rgba(255,80,0,0.2) !important;
+}
+#screen-quiz.boss-mode .level-track-label {
+  color: #ff8c00 !important;
+}
+#screen-quiz.boss-mode .battle-topbar {
+  background: rgba(40,8,0,0.6) !important;
+  border-bottom-color: rgba(255,100,0,0.2) !important;
+}

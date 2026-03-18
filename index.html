@@ -27,6 +27,7 @@
       <div class="map-topbar-center">ARD Life</div>
       <div class="map-topbar-right">
         <div class="pts-badge">⭐ <span id="map-points">0</span></div>
+        <button class="mute-btn" onclick="toggleMute()" title="Sound an/aus">🔊</button>
         <button class="wheel-pill" onclick="App.goWheel()">◎</button>
       </div>
     </div>
@@ -70,6 +71,11 @@
       </div>
       <div class="pts-badge">⭐ <span id="quiz-points">0</span></div>
     </header>
+    <!-- Boss timer bar (shown only for question 5) -->
+    <div class="boss-timer-wrap" id="boss-timer-wrap" style="display:none">
+      <div class="boss-timer-bar" id="boss-timer-bar"></div>
+      <span class="boss-timer-label">⚔️ BOSS</span>
+    </div>
 
     <!-- HP Track + Level progress pips -->
     <div class="level-track-row">
@@ -156,6 +162,21 @@
     <div id="wheel-legend" class="wheel-legend"></div>
     <button class="reset-btn" onclick="App.resetGame()">Spiel zurücksetzen</button>
   </section>
+
+  <!-- ══ Narrator Voice Box ══ -->
+  <div id="narrator" class="narrator-box">
+    <span id="narrator-text"></span>
+  </div>
+
+  <!-- ══ Boss Warning Overlay ══ -->
+  <div id="boss-warning" class="boss-warning">
+    <div class="boss-warning-icon">⚔️</div>
+    <div class="boss-warning-text">BOSS-FRAGE!</div>
+    <div class="boss-warning-sub">Die letzte Herausforderung</div>
+  </div>
+
+  <!-- ══ Screen Crack ══ -->
+  <div id="screen-crack" class="screen-crack"></div>
 
   <!-- ══ Battle Intro Overlay ══ -->
   <div id="battle-intro" class="battle-intro">
