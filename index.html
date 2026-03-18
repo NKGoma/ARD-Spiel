@@ -15,30 +15,50 @@
       <div class="ard-badge">ARD</div>
       <h1 class="start-title">ARD Life</h1>
       <p class="start-tagline">Sechs Welten. Unendliches Wissen.</p>
-      <button class="btn-explore" onclick="App.goWorlds()">Erkunde ›</button>
+      <button class="btn-explore" onclick="App.goMap()">Erkunde ›</button>
     </div>
   </section>
 
-  <!-- ══ SCREEN 2: World Explorer ══ -->
-  <section id="screen-worlds" class="screen">
-    <div class="worlds-topbar">
-      <div class="pts-badge">⭐ <span id="total-points">0</span></div>
+  <!-- ══ SCREEN 2: RPG World Map ══ -->
+  <section id="screen-map" class="screen">
+    <div class="map-topbar">
+      <div class="pts-badge">⭐ <span id="map-points">0</span></div>
+      <div class="streak-badge" id="streak-badge">🔥 <span id="map-streak">0</span></div>
       <button class="wheel-pill" onclick="App.goWheel()">Wheel ○</button>
     </div>
-    <div class="worlds-viewport" id="worlds-viewport">
-      <div class="worlds-track" id="worlds-track"></div>
+
+    <div class="map-world" id="map-world">
+      <div id="map-stars"  class="map-stars"></div>
+      <div id="map-glows"  class="map-glows"></div>
+      <svg id="map-paths"  class="map-paths" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="map-nodes"  class="map-nodes"></div>
+      <div id="player"     class="player">
+        <div class="player-sprite">🧙</div>
+        <div class="player-shadow"></div>
+      </div>
     </div>
-    <div class="worlds-nav">
-      <button class="nav-arrow" id="btn-prev" onclick="App.prevWorld()">‹</button>
-      <div class="world-dots" id="world-dots"></div>
-      <button class="nav-arrow" id="btn-next" onclick="App.nextWorld()">›</button>
+
+    <!-- Mission HUD – slides up from bottom -->
+    <div id="mission-hud" class="mission-hud">
+      <div class="mission-top">
+        <span class="mission-kicker">MISSION BRIEF</span>
+        <span class="mission-combo" id="mission-combo"></span>
+      </div>
+      <h3 class="mission-title" id="mission-title">Wähle eine Welt</h3>
+      <p  class="mission-text"  id="mission-text"></p>
+      <div class="mission-meta">
+        <span id="mission-objective"></span>
+        <span id="mission-bonus"></span>
+      </div>
+      <button class="btn-enter-world" id="btn-enter-world"
+              onclick="App.enterCurrentWorld()">Betreten →</button>
     </div>
   </section>
 
   <!-- ══ SCREEN 3: Quiz ══ -->
   <section id="screen-quiz" class="screen">
     <header class="quiz-header">
-      <button class="back-btn" onclick="App.goWorlds()">←</button>
+      <button class="back-btn" onclick="App.goMap()">←</button>
       <span id="quiz-cat-name" class="quiz-cat-name"></span>
       <div class="pts-badge">⭐ <span id="quiz-points">0</span></div>
     </header>
@@ -52,15 +72,17 @@
   <!-- ══ SCREEN 4: Feedback ══ -->
   <section id="screen-feedback" class="screen">
     <div class="feedback-inner">
-      <div id="fb-icon" class="fb-icon"></div>
-      <h2 id="fb-result" class="fb-result"></h2>
-      <p id="fb-correct-label" class="fb-correct-label"></p>
-      <div class="insight-card" id="insight-card">
+      <div id="fb-icon"          class="fb-icon"></div>
+      <h2  id="fb-result"        class="fb-result"></h2>
+      <p   id="fb-correct-label" class="fb-correct-label"></p>
+      <div class="insight-card">
         <div class="insight-bar" id="insight-bar"></div>
         <p id="fb-insight"></p>
       </div>
-      <a id="fb-link" class="ard-pill" href="#" target="_blank" rel="noopener">ARD Inhalt ansehen →</a>
-      <button class="btn-weiter" onclick="App.goWorlds()">Weiter →</button>
+      <a id="fb-link" class="ard-pill" href="#" target="_blank" rel="noopener">
+        ARD Inhalt ansehen →
+      </a>
+      <button class="btn-weiter" onclick="App.goMap()">Weiter →</button>
     </div>
     <div class="point-float" id="point-float">+1 ⭐</div>
   </section>
@@ -68,7 +90,7 @@
   <!-- ══ SCREEN 5: Wheel of Life ══ -->
   <section id="screen-wheel" class="screen">
     <header class="wheel-header">
-      <button class="back-btn back-btn--light" onclick="App.goWorlds()">←</button>
+      <button class="back-btn back-btn--light" onclick="App.goMap()">←</button>
       <h2 class="wheel-title">Wheel of Life</h2>
       <div class="pts-badge pts-badge--gold">⭐ <span id="wheel-points">0</span></div>
     </header>
