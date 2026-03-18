@@ -1,13 +1,10 @@
 /* ══════════════════════════════════════════
-   ARD Life – Pokemon × ARD Mediathek
-   app.js  v3  —  game engine
+   ARD Life – Das Wissensduell
+   app.js  v4  —  Multiplayer Board Game
 ══════════════════════════════════════════ */
 
-const LETTERS    = ['A', 'B', 'C'];
-const RUN_LENGTH = 5; // questions per world run
-
 /* ═════════════════════════════════════════
-   WEB AUDIO ENGINE  (zero file dependencies)
+   WEB AUDIO ENGINE
 ═════════════════════════════════════════ */
 let _audioCtx = null;
 let _muted    = false;
@@ -18,7 +15,6 @@ function getAudioCtx() {
   }
   return _audioCtx;
 }
-
 function playTone(freq, type, duration, gain = 0.3, startDelay = 0) {
   if (_muted) return;
   const ctx = getAudioCtx();
@@ -26,68 +22,31 @@ function playTone(freq, type, duration, gain = 0.3, startDelay = 0) {
   try {
     const osc = ctx.createOscillator();
     const vol = ctx.createGain();
-    osc.connect(vol);
-    vol.connect(ctx.destination);
-    osc.type = type;
-    osc.frequency.value = freq;
+    osc.connect(vol); vol.connect(ctx.destination);
+    osc.type = type; osc.frequency.value = freq;
     const t = ctx.currentTime + startDelay;
     vol.gain.setValueAtTime(0, t);
     vol.gain.linearRampToValueAtTime(gain, t + 0.012);
     vol.gain.exponentialRampToValueAtTime(0.001, t + duration);
-    osc.start(t);
-    osc.stop(t + duration + 0.05);
+    osc.start(t); osc.stop(t + duration + 0.05);
   } catch(e) {}
 }
-
-function synthCorrect() {
-  [523, 659, 784].forEach((f, i) => playTone(f, 'sine', 0.2, 0.22, i * 0.08));
-}
-function synthWrong() {
-  playTone(330, 'sawtooth', 0.25, 0.14, 0);
-  playTone(247, 'sawtooth', 0.3,  0.12, 0.12);
-}
-function synthStreak3() {
-  [523, 659, 784, 1047].forEach((f, i) => playTone(f, 'square', 0.18, 0.14, i * 0.07));
-}
-function synthStreak5() {
-  [523, 659, 784, 1047].forEach((f, i) => playTone(f, 'sine', 0.35, 0.2, i * 0.09));
-  playTone(220, 'sawtooth', 0.5, 0.07, 0);
-}
-function synthStreak7() {
-  [261, 329, 392, 523, 659, 784, 1047].forEach((f, i) =>
-    playTone(f, 'sine', 0.5, 0.18, i * 0.07)
-  );
-}
-function synthUnlock() {
-  [523, 587, 659, 784].forEach((f, i) => playTone(f, 'sine', 0.35, 0.28, i * 0.12));
-  setTimeout(() => [784, 880, 1047].forEach((f, i) => playTone(f, 'sine', 0.4, 0.22, i * 0.1)), 520);
-}
-function synthBoss() {
-  playTone(110, 'sawtooth', 0.7, 0.3, 0);
-  playTone(55,  'sine',     0.9, 0.35, 0.1);
-  playTone(73,  'square',   0.4, 0.12, 0.35);
-}
-function synthTick() {
-  playTone(1400, 'square', 0.018, 0.035);
-}
-function synthNav() {
-  playTone(440, 'sine', 0.12, 0.1, 0);
-  playTone(660, 'sine', 0.1,  0.08, 0.07);
-}
-function synthStreakBreak() {
-  [440, 330, 220].forEach((f, i) => playTone(f, 'sawtooth', 0.28, 0.16, i * 0.1));
-}
-
-function toggleMute() {
-  _muted = !_muted;
-  document.querySelectorAll('.mute-btn').forEach(b => { b.textContent = _muted ? '🔇' : '🔊'; });
-}
+function synthCorrect()  { [523,659,784].forEach((f,i) => playTone(f,'sine',0.2,0.22,i*0.08)); }
+function synthWrong()    { playTone(330,'sawtooth',0.25,0.14,0); playTone(247,'sawtooth',0.3,0.12,0.12); }
+function synthDuel()     { playTone(110,'sawtooth',0.7,0.3,0); playTone(55,'sine',0.9,0.35,0.1); }
+function synthSteal()    { [784,659,523].forEach((f,i) => playTone(f,'sine',0.25,0.25,i*0.09)); }
+function synthUnlock()   { [523,587,659,784].forEach((f,i) => playTone(f,'sine',0.35,0.28,i*0.12)); setTimeout(()=>[784,880,1047].forEach((f,i)=>playTone(f,'sine',0.4,0.22,i*0.1)),520); }
+function synthRoll()     { [330,415,523].forEach((f,i) => playTone(f,'sine',0.15,0.15,i*0.06)); }
+function synthTick()     { playTone(1400,'square',0.018,0.035); }
+function synthNav()      { playTone(440,'sine',0.12,0.1,0); playTone(550,'sine',0.1,0.08,0.06); }
+function synthEvent()    { [261,329,392].forEach((f,i) => playTone(f,'sine',0.3,0.2,i*0.1)); }
+function synthCombo()    { [523,659,784,1047].forEach((f,i) => playTone(f,'square',0.18,0.14,i*0.07)); }
+function synthWin()      { [261,329,392,523,659,784,1047].forEach((f,i) => playTone(f,'sine',0.5,0.2,i*0.08)); }
 
 /* ═════════════════════════════════════════
-   NARRATOR VOICE BOX
+   NARRATOR
 ═════════════════════════════════════════ */
 let _narratorTimer = null;
-
 function showNarrator(text, duration = 2500) {
   const box = document.getElementById('narrator');
   if (!box) return;
@@ -97,541 +56,13 @@ function showNarrator(text, duration = 2500) {
   clearTimeout(_narratorTimer);
   _narratorTimer = setTimeout(() => {
     box.classList.add('narrator-exit');
-    setTimeout(() => box.classList.remove('narrator-active', 'narrator-exit'), 500);
+    setTimeout(() => box.classList.remove('narrator-active','narrator-exit'), 500);
   }, duration);
 }
 
 /* ═════════════════════════════════════════
-   COMBO EXPLOSION SYSTEM
+   VISUAL EFFECTS
 ═════════════════════════════════════════ */
-function triggerComboExplosion(streak) {
-  const el = document.createElement('div');
-  el.className = 'combo-explosion';
-  if (streak >= 7) {
-    el.textContent = 'LEGENDÄR! ⭐';
-    el.classList.add('combo-legendary');
-    spawnStarRain();
-    synthStreak7();
-  } else if (streak >= 5) {
-    el.textContent = 'FEUER! 🔥';
-    el.classList.add('combo-fire');
-    spawnFireRain();
-    synthStreak5();
-  } else {
-    el.textContent = `COMBO ×${streak}!`;
-    el.classList.add('combo-normal');
-    synthStreak3();
-  }
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 1500);
-}
-
-function spawnFireRain() {
-  const colors = ['#ff4500','#ff6b00','#ffd700','#ff2200','#ff8c00'];
-  for (let i = 0; i < 28; i++) {
-    const p = document.createElement('div');
-    p.className = 'rain-particle fire-particle';
-    p.style.cssText = `
-      left:${Math.random()*100}%;top:-8px;
-      background:${colors[Math.floor(Math.random()*colors.length)]};
-      width:${3+Math.random()*5}px;height:${3+Math.random()*5}px;
-      animation-delay:${(Math.random()*0.5).toFixed(2)}s;
-      animation-duration:${(0.55+Math.random()*0.55).toFixed(2)}s;
-    `;
-    document.body.appendChild(p);
-    setTimeout(() => p.remove(), 1300);
-  }
-  const tint = document.createElement('div');
-  tint.className = 'screen-tint fire-tint';
-  document.body.appendChild(tint);
-  setTimeout(() => tint.remove(), 1000);
-}
-
-function spawnStarRain() {
-  for (let i = 0; i < 36; i++) {
-    const p = document.createElement('div');
-    p.className = 'rain-particle star-particle';
-    p.textContent = Math.random() > 0.5 ? '⭐' : '✨';
-    p.style.cssText = `
-      left:${Math.random()*100}%;top:-20px;
-      font-size:${10+Math.random()*16}px;
-      animation-delay:${(Math.random()*0.8).toFixed(2)}s;
-      animation-duration:${(0.7+Math.random()*0.8).toFixed(2)}s;
-    `;
-    document.body.appendChild(p);
-    setTimeout(() => p.remove(), 1800);
-  }
-  const flash = document.createElement('div');
-  flash.className = 'screen-tint legendary-flash';
-  document.body.appendChild(flash);
-  setTimeout(() => flash.remove(), 700);
-}
-
-/* ═════════════════════════════════════════
-   BOSS QUESTION SYSTEM
-═════════════════════════════════════════ */
-function showBossWarning(callback) {
-  const el = document.getElementById('boss-warning');
-  if (!el) { callback(); return; }
-  synthBoss();
-  el.classList.add('boss-active');
-  setTimeout(() => {
-    el.classList.add('boss-fadeout');
-    setTimeout(() => { el.classList.remove('boss-active','boss-fadeout'); callback(); }, 450);
-  }, 1600);
-}
-
-function startBossTimer() {
-  const wrap = document.getElementById('boss-timer-wrap');
-  const bar  = document.getElementById('boss-timer-bar');
-  if (!wrap || !bar) return;
-  wrap.style.display = 'flex';
-  bar.style.animation = 'none';
-  void bar.offsetWidth;
-  bar.style.animation = 'timerCountdown 20s linear forwards';
-}
-
-function hideBossTimer() {
-  const wrap = document.getElementById('boss-timer-wrap');
-  if (wrap) wrap.style.display = 'none';
-}
-
-/* ═════════════════════════════════════════
-   SCREEN CRACK
-═════════════════════════════════════════ */
-function showScreenCrack() {
-  const el = document.getElementById('screen-crack');
-  if (!el) return;
-  el.classList.remove('crack-active');
-  void el.offsetWidth;
-  el.classList.add('crack-active');
-  setTimeout(() => el.classList.remove('crack-active'), 750);
-}
-
-/* ═════════════════════════════════════════
-   STREAK BREAK DRAMA
-═════════════════════════════════════════ */
-function showStreakBreakDrama(lostStreak) {
-  if (lostStreak < 3) return;
-  synthStreakBreak();
-  const el = document.createElement('div');
-  el.className = 'streak-broken-text';
-  el.textContent = `STREAK ×${lostStreak} GEBROCHEN!`;
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 1300);
-  showNarrator('Autsch! Der Streak ist gebrochen... Kopf hoch! 💪', 2200);
-}
-
-/* ═════════════════════════════════════════
-   LIVING MAP
-═════════════════════════════════════════ */
-function addMapClouds() {
-  const mapWorld = document.getElementById('map-world');
-  if (!mapWorld || document.getElementById('map-clouds')) return;
-  const cc = document.createElement('div');
-  cc.id = 'map-clouds';
-  cc.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden;';
-  [
-    { top:'6%',  size:55, dur:48, delay:0,   opacity:0.055 },
-    { top:'21%', size:85, dur:65, delay:-22, opacity:0.04  },
-    { top:'47%', size:65, dur:52, delay:-12, opacity:0.05  },
-  ].forEach(c => {
-    const cloud = document.createElement('div');
-    cloud.className = 'map-cloud';
-    cloud.style.cssText = `top:${c.top};width:${c.size*2.2}px;height:${c.size}px;opacity:${c.opacity};animation:cloudDrift ${c.dur}s ${c.delay}s linear infinite;`;
-    cc.appendChild(cloud);
-  });
-  mapWorld.insertBefore(cc, mapWorld.firstChild);
-}
-
-let _pendingUnlockAnimations = [];
-
-function animateMapUnlock(catId) {
-  const cat = DATA.categories.find(c => c.id === catId);
-  if (!cat) return;
-  document.querySelectorAll('.map-node').forEach(node => {
-    const label = node.querySelector('.node-label');
-    if (label && label.textContent === cat.label) {
-      node.classList.add('node-awakening');
-      setTimeout(() => node.classList.remove('node-awakening'), 3500);
-    }
-  });
-}
-
-function addPlayerSparkleTrail() {
-  const player = document.getElementById('player');
-  if (!player) return;
-  const rect = player.getBoundingClientRect();
-  for (let i = 0; i < 5; i++) {
-    const p = document.createElement('div');
-    p.className = 'player-trail';
-    p.style.left = (rect.left + rect.width/2  + (Math.random()-0.5)*12) + 'px';
-    p.style.top  = (rect.top  + rect.height/2 + (Math.random()-0.5)*12) + 'px';
-    p.style.animationDelay = (i * 0.06) + 's';
-    document.body.appendChild(p);
-    setTimeout(() => p.remove(), 900);
-  }
-}
-
-/* ─────────────────────────────────────────
-   World themes
-───────────────────────────────────────── */
-const WORLDS = {
-  grundwissen: {
-    bg: 'linear-gradient(155deg,#0d1f10,#1a3a1f)',
-    accent: '#81c784', accentGlow: '#4caf50',
-    nodeBg: 'rgba(46,125,50,0.55)', nodeGlow: 'rgba(76,175,80,0.6)',
-    text: '#e8f5e9', textMuted: 'rgba(232,245,233,0.52)',
-    surface: 'rgba(255,255,255,0.08)', surfaceHov: 'rgba(255,255,255,0.14)',
-    btnBg: '#2e7d32', btnText: '#e8f5e9',
-    zoneFill: 'rgba(76,175,80,0.2)', zoneSize: 230,
-    ambientChars: ['?', '!', '💡', '📚'],
-  },
-  sport: {
-    bg: 'linear-gradient(155deg,#04080f,#071830)',
-    accent: '#64b5f6', accentGlow: '#1976d2',
-    nodeBg: 'rgba(21,101,192,0.55)', nodeGlow: 'rgba(100,181,246,0.65)',
-    text: '#e3f2fd', textMuted: 'rgba(227,242,253,0.48)',
-    surface: 'rgba(255,255,255,0.06)', surfaceHov: 'rgba(255,255,255,0.12)',
-    btnBg: '#1565c0', btnText: '#e3f2fd',
-    zoneFill: 'rgba(25,118,210,0.18)', zoneSize: 210,
-    ambientChars: ['⚡', '▶', '◆', '●'],
-  },
-  musik: {
-    bg: 'linear-gradient(155deg,#06010f,#15063a)',
-    accent: '#ce93d8', accentGlow: '#9c27b0',
-    nodeBg: 'rgba(106,27,154,0.55)', nodeGlow: 'rgba(206,147,216,0.65)',
-    text: '#f3e5f5', textMuted: 'rgba(243,229,245,0.48)',
-    surface: 'rgba(255,255,255,0.06)', surfaceHov: 'rgba(255,255,255,0.11)',
-    btnBg: '#6a1b9a', btnText: '#f3e5f5',
-    zoneFill: 'rgba(156,39,176,0.2)', zoneSize: 215,
-    ambientChars: ['♪', '♫', '♬', '🎵'],
-  },
-  humor: {
-    bg: 'linear-gradient(155deg,#3f0f00,#9f2900)',
-    accent: '#ffcc02', accentGlow: '#ff9800',
-    nodeBg: 'rgba(191,54,12,0.55)', nodeGlow: 'rgba(255,204,2,0.6)',
-    text: '#fff8e1', textMuted: 'rgba(255,248,225,0.5)',
-    surface: 'rgba(255,255,255,0.1)', surfaceHov: 'rgba(255,255,255,0.17)',
-    btnBg: '#bf360c', btnText: '#fff8e1',
-    zoneFill: 'rgba(230,74,25,0.18)', zoneSize: 200,
-    ambientChars: ['★', '✦', '✨', '•'],
-  },
-  geschichte: {
-    bg: 'linear-gradient(155deg,#080400,#1f1000)',
-    accent: '#d4a96a', accentGlow: '#8d6e63',
-    nodeBg: 'rgba(93,64,55,0.55)', nodeGlow: 'rgba(212,169,106,0.6)',
-    text: '#fdf0d5', textMuted: 'rgba(253,240,213,0.48)',
-    surface: 'rgba(255,200,130,0.07)', surfaceHov: 'rgba(255,200,130,0.13)',
-    btnBg: '#5d4037', btnText: '#fdf0d5',
-    zoneFill: 'rgba(141,110,99,0.18)', zoneSize: 205,
-    ambientChars: ['◎', '✦', '○', '△'],
-  },
-  kultur: {
-    bg: 'linear-gradient(155deg,#020204,#0a0a14)',
-    accent: '#90a4ae', accentGlow: '#607d8b',
-    nodeBg: 'rgba(55,71,79,0.55)', nodeGlow: 'rgba(144,164,174,0.6)',
-    text: '#eceff1', textMuted: 'rgba(236,239,241,0.45)',
-    surface: 'rgba(255,255,255,0.05)', surfaceHov: 'rgba(255,255,255,0.09)',
-    btnBg: '#37474f', btnText: '#eceff1',
-    zoneFill: 'rgba(96,125,139,0.18)', zoneSize: 195,
-    ambientChars: ['◇', '□', '○', '△'],
-  },
-};
-
-/* ─────────────────────────────────────────
-   World narrative (mission HUD)
-───────────────────────────────────────── */
-const WORLD_STORY = {
-  grundwissen: {
-    subtitle: 'Neon Archive',
-    text:     'Die Basis-KI ist instabil. Stabilisiere die Kernfakten und aktiviere das erste Datennetz.',
-    objective:'🎯 Ziel: Level 3 → Sport-Portal öffnet sich',
-    bonus:    '⚡ Bonus: 3er-Combo gibt +1 Punkt',
-  },
-  sport: {
-    subtitle: 'Velocity Arena',
-    text:     'In dieser Arena zählen Fokus, Rhythmus und Ausdauer. Jeder Treffer lädt den Boost-Reaktor.',
-    objective:'🎯 Ziel: Level 5 in Sport erreichen',
-    bonus:    '⚡ Bonus: Jede 3er-Serie = +1 Bonuspunkt',
-  },
-  musik: {
-    subtitle: 'Echo District',
-    text:     'Resonanzfelder reagieren auf richtige Antworten. Spiele im Takt und halte den Flow.',
-    objective:'🎯 Ziel: Level 3 → Humor-Tor öffnet sich',
-    bonus:    '⚡ Bonus: Kombos verlängern den Flow',
-  },
-  humor: {
-    subtitle: 'Glitch Comedy Club',
-    text:     'Satire-Bots prüfen deine Reaktionsfähigkeit. Lachen ist hier ein Schild gegen Rauschen.',
-    objective:'🎯 Ziel: Level 3 → Geschichte-Sektor frei',
-    bonus:    '⚡ Bonus: Kein Fehlklick = Combo aktiv',
-  },
-  geschichte: {
-    subtitle: 'Chronicle Vault',
-    text:     'Zeitfragmente sind verstreut. Rekonstruiere die Vergangenheit, um den Endsektor zu öffnen.',
-    objective:'🎯 Ziel: Level 3 → Kultur-Galerie entsperrt',
-    bonus:    '⚡ Bonus: Bonuspunkte beschleunigen den Run',
-  },
-  kultur: {
-    subtitle: 'Finale Galerie',
-    text:     'Du bist im Endgame. Vervollständige das Wissensrad und maxe alle Welten auf Level 5.',
-    objective:'🎯 Ziel: 6 Welten × Level 5 = Maxout',
-    bonus:    '⚡ Bonus: Breche deinen Combo-Rekord',
-  },
-};
-
-/* ─────────────────────────────────────────
-   Map layout
-───────────────────────────────────────── */
-const NODE_POS = {
-  grundwissen: { x: 50, y: 82 },
-  sport:       { x: 83, y: 60 },
-  musik:       { x: 78, y: 23 },
-  humor:       { x: 48, y: 10 },
-  geschichte:  { x: 17, y: 26 },
-  kultur:      { x: 14, y: 63 },
-};
-
-const PATH        = ['grundwissen','sport','musik','humor','geschichte','kultur'];
-const CONNECTIONS = PATH.slice(0,-1).map((id,i) => [id, PATH[i+1]]);
-
-/* ─────────────────────────────────────────
-   Game state
-───────────────────────────────────────── */
-const STATE_KEY = 'ard_state_v2';
-let DATA = null;
-let state = null;
-let currentMapNode = 'grundwissen';
-let currentRun     = null; // { catId, questions, levelIdx, results, correct }
-let _typerInterval = null; // active typewriter interval ref
-
-function defaultState(cats) {
-  const scores = {};
-  cats.forEach(c => { scores[c.id] = 0; });
-  return { scores, points: 0, seen: [], streak: 0, maxStreak: 0 };
-}
-
-function loadState(cats) {
-  try {
-    const raw = localStorage.getItem(STATE_KEY);
-    if (raw) {
-      const p = JSON.parse(raw);
-      cats.forEach(c => { if (p.scores[c.id] === undefined) p.scores[c.id] = 0; });
-      p.streak    = p.streak    || 0;
-      p.maxStreak = p.maxStreak || 0;
-      return p;
-    }
-  } catch(e) {}
-  return defaultState(cats);
-}
-
-function saveState() {
-  localStorage.setItem(STATE_KEY, JSON.stringify(state));
-}
-
-/* ─────────────────────────────────────────
-   Unlock logic
-───────────────────────────────────────── */
-function isUnlocked(catId) {
-  const cat = DATA.categories.find(c => c.id === catId);
-  if (!cat || !cat.unlockRequirement) return true;
-  return (state.scores[cat.unlockRequirement.category] || 0)
-    >= cat.unlockRequirement.minLevel;
-}
-
-function unlockHintText(catId) {
-  const cat = DATA.categories.find(c => c.id === catId);
-  if (!cat || !cat.unlockRequirement) return '';
-  const { category, minLevel } = cat.unlockRequirement;
-  const dep = DATA.categories.find(c => c.id === category);
-  return `🔒 ${dep ? dep.label : category} Level ${state.scores[category]||0}/${minLevel}`;
-}
-
-/* ─────────────────────────────────────────
-   Screen management
-───────────────────────────────────────── */
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const el = document.getElementById(id);
-  if (el) el.classList.add('active');
-}
-
-/* ─────────────────────────────────────────
-   World theme → quiz/feedback/complete
-───────────────────────────────────────── */
-function applyWorldTheme(w) {
-  ['screen-quiz','screen-feedback','screen-complete'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.style.background = w.bg;
-    el.style.setProperty('--quiz-bg',            w.bg);
-    el.style.setProperty('--quiz-text',          w.text);
-    el.style.setProperty('--quiz-muted',         w.textMuted);
-    el.style.setProperty('--quiz-accent',        w.accent);
-    el.style.setProperty('--quiz-surface',       w.surface);
-    el.style.setProperty('--quiz-surface-hover', w.surfaceHov);
-    el.style.setProperty('--quiz-btn-bg',        w.btnBg);
-    el.style.setProperty('--quiz-btn-text',      w.btnText);
-  });
-  // HP bar color
-  const hpFill = document.getElementById('hp-bar-fill');
-  if (hpFill) hpFill.style.background = w.accent;
-  // Insight bar color
-  const bar = document.getElementById('insight-bar');
-  if (bar) bar.style.background = w.accent;
-}
-
-/* ─────────────────────────────────────────
-   BATTLE INTRO ANIMATION
-   Pokemon encounter flash effect
-───────────────────────────────────────── */
-function battleIntro(catId, callback) {
-  const w   = WORLDS[catId];
-  const cat = DATA.categories.find(c => c.id === catId);
-  const bi  = document.getElementById('battle-intro');
-
-  if (!bi) { callback(); return; }
-
-  // Style the overlay background to match world
-  bi.style.background = w.bg;
-
-  // Inject world name
-  const nameEl  = document.getElementById('bi-world-name');
-  const eyeEl   = bi.querySelector('.bi-eyebrow');
-  if (nameEl) {
-    nameEl.textContent   = `${cat.emoji}  ${cat.label}`;
-    nameEl.style.color   = w.accent;
-    nameEl.style.textShadow = `0 0 40px ${w.accentGlow}`;
-  }
-  if (eyeEl) eyeEl.textContent = '— Betreten —';
-
-  // Trigger animation
-  bi.classList.remove('fadeout');
-  bi.classList.add('active');
-
-  // After 1.35s start fadeout, then callback
-  setTimeout(() => {
-    bi.classList.add('fadeout');
-    setTimeout(() => {
-      bi.classList.remove('active','fadeout');
-      callback();
-    }, 380);
-  }, 1350);
-}
-
-/* ─────────────────────────────────────────
-   TYPEWRITER EFFECT
-───────────────────────────────────────── */
-function typewriterQuestion(text, onComplete) {
-  // Clear any previous typewriter
-  if (_typerInterval) { clearInterval(_typerInterval); _typerInterval = null; }
-
-  const el = document.getElementById('quiz-question');
-  el.textContent = '';
-  el.style.animation = 'none';
-  void el.offsetWidth;
-  el.style.animation = '';
-
-  // Add blinking cursor
-  const cursor = document.createElement('span');
-  cursor.className = 'typewriter-cursor';
-  el.appendChild(cursor);
-
-  let i = 0;
-  const CHAR_DELAY = 22; // ms per character
-
-  const finish = () => {
-    clearInterval(_typerInterval);
-    _typerInterval = null;
-    el.textContent = text; // remove cursor, show full text
-    onComplete();
-  };
-
-  // Tap anywhere on question to skip
-  el.addEventListener('click', finish, { once: true });
-
-  _typerInterval = setInterval(() => {
-    if (i >= text.length) { finish(); return; }
-    el.textContent = text.slice(0, ++i);
-    el.appendChild(cursor); // keep cursor at end
-    if (i % 3 === 0) synthTick(); // soft tick every 3 chars
-  }, CHAR_DELAY);
-}
-
-/* ─────────────────────────────────────────
-   HP BAR
-───────────────────────────────────────── */
-function updateHpBar(levelIdx) {
-  const fill = document.getElementById('hp-bar-fill');
-  if (!fill) return;
-  const pct   = ((RUN_LENGTH - levelIdx) / RUN_LENGTH * 100).toFixed(1);
-  fill.style.width = pct + '%';
-  // Color shifts green→yellow→red as HP depletes
-  if (pct > 60) {
-    fill.style.background = 'var(--quiz-accent)';
-  } else if (pct > 30) {
-    fill.style.background = '#ffcc02';
-  } else {
-    fill.style.background = '#ef5350';
-  }
-  const w = currentRun ? WORLDS[currentRun.catId] : null;
-  if (w && pct > 60) {
-    fill.style.boxShadow = `0 0 10px ${w.accentGlow}`;
-  } else {
-    fill.style.boxShadow = '0 0 10px rgba(255,80,80,0.4)';
-  }
-}
-
-/* ─────────────────────────────────────────
-   AMBIENT FLOATING ELEMENTS
-───────────────────────────────────────── */
-function createAmbientElements(catId) {
-  clearAmbient();
-  const w   = WORLDS[catId];
-  const el  = document.getElementById('screen-quiz');
-  if (!el || !w.ambientChars) return;
-
-  const wrap = document.createElement('div');
-  wrap.id = 'ambient-wrap';
-  wrap.style.cssText = `
-    position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;
-  `;
-
-  const count = 10;
-  for (let i = 0; i < count; i++) {
-    const piece = document.createElement('div');
-    const char  = w.ambientChars[Math.floor(Math.random() * w.ambientChars.length)];
-    const size  = 12 + Math.random() * 18;
-    const left  = (5 + Math.random() * 90).toFixed(1);
-    const delay = (Math.random() * 12).toFixed(2);
-    const dur   = (8 + Math.random() * 10).toFixed(2);
-
-    piece.textContent = char;
-    piece.style.cssText = `
-      position:absolute;
-      left:${left}%;
-      bottom:${(Math.random() * 30).toFixed(1)}%;
-      font-size:${size}px;
-      opacity:0;
-      color:${w.accent};
-      animation:particleDrift ${dur}s ${delay}s linear infinite;
-      filter:blur(0.5px);
-    `;
-    wrap.appendChild(piece);
-  }
-
-  el.appendChild(wrap);
-}
-
-function clearAmbient() {
-  const el = document.getElementById('ambient-wrap');
-  if (el) el.remove();
-}
-
-/* ─────────────────────────────────────────
-   SCREEN FLASH  (correct / wrong)
-───────────────────────────────────────── */
 function flashScreen(type) {
   const el = document.getElementById('screen-flash');
   if (!el) return;
@@ -641,25 +72,41 @@ function flashScreen(type) {
   setTimeout(() => { el.className = 'screen-flash'; }, 500);
 }
 
-/* ─────────────────────────────────────────
-   CONFETTI
-───────────────────────────────────────── */
-function launchConfetti(w) {
-  const container = document.getElementById('screen-complete');
-  if (!container) return;
-  const colors = [w.accent, '#ffd700', '#ff6b9d', '#00d4ff', w.accentGlow, '#fff'];
+function showScreenCrack() {
+  const el = document.getElementById('screen-crack');
+  if (!el) return;
+  el.classList.remove('crack-active');
+  void el.offsetWidth;
+  el.classList.add('crack-active');
+  setTimeout(() => el.classList.remove('crack-active'), 750);
+}
 
-  for (let i = 0; i < 32; i++) {
+function createSparkles(x, y, color) {
+  for (let i = 0; i < 10; i++) {
+    const angle = (i / 10) * 2 * Math.PI;
+    const dist  = 44 + Math.random() * 32;
+    const spark = document.createElement('div');
+    spark.className = 'spark';
+    spark.style.cssText = `left:${x}px;top:${y}px;background:${i%2===0?color:'#ffd700'};
+      --dx:${(Math.cos(angle)*dist).toFixed(1)}px;--dy:${(Math.sin(angle)*dist).toFixed(1)}px;`;
+    document.body.appendChild(spark);
+    requestAnimationFrame(() => spark.classList.add('burst'));
+    setTimeout(() => spark.remove(), 650);
+  }
+}
+
+function spawnConfetti(container) {
+  const colors = ['#ff6b6b','#4ecdc4','#ffd700','#c084fc','#ff9f43','#00d4ff'];
+  for (let i = 0; i < 40; i++) {
     const piece = document.createElement('div');
     piece.className = 'confetti-piece';
-    const size = 4 + Math.random() * 9;
+    const size = 4 + Math.random() * 8;
     piece.style.cssText = `
-      left:${(Math.random() * 100).toFixed(1)}%;
-      width:${size}px; height:${size * (0.5 + Math.random())}px;
-      background:${colors[Math.floor(Math.random() * colors.length)]};
-      animation-delay:${(Math.random() * 0.8).toFixed(2)}s;
-      animation-duration:${(1.8 + Math.random() * 1.5).toFixed(2)}s;
-      border-radius:${Math.random() > 0.4 ? '50%' : '2px'};
+      left:${Math.random()*100}%;width:${size}px;height:${size*(0.5+Math.random())}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-delay:${(Math.random()*0.8).toFixed(2)}s;
+      animation-duration:${(1.8+Math.random()*1.5).toFixed(2)}s;
+      border-radius:${Math.random()>0.4?'50%':'2px'};
     `;
     container.appendChild(piece);
     setTimeout(() => piece.remove(), 4000);
@@ -667,745 +114,188 @@ function launchConfetti(w) {
 }
 
 /* ═════════════════════════════════════════
-   MAP ENGINE
+   WORLD THEMES (6 categories)
 ═════════════════════════════════════════ */
-function renderMap() {
-  const mp = document.getElementById('map-points');
-  if (mp) mp.textContent = state.points;
+const WORLDS = {
+  grundwissen: { accent:'#81c784', accentGlow:'#4caf50', btnBg:'#2e7d32', label:'Grundwissen', emoji:'🧠' },
+  sport:       { accent:'#64b5f6', accentGlow:'#1976d2', btnBg:'#1565c0', label:'Sport',       emoji:'⚽' },
+  musik:       { accent:'#ce93d8', accentGlow:'#9c27b0', btnBg:'#6a1b9a', label:'Musik',       emoji:'🎵' },
+  humor:       { accent:'#ffcc02', accentGlow:'#ff9800', btnBg:'#bf360c', label:'Humor',       emoji:'😂' },
+  geschichte:  { accent:'#d4a96a', accentGlow:'#8d6e63', btnBg:'#5d4037', label:'Geschichte',  emoji:'📚' },
+  kultur:      { accent:'#90a4ae', accentGlow:'#607d8b', btnBg:'#37474f', label:'Kultur',      emoji:'🌍' },
+};
 
-  generateStars();
-  renderZoneGlows();
-  renderPaths();
-  renderNodes();
-  positionPlayer(false);
-  renderMissionHUD();
-  setupKeyboard();
-  setupSwipe();
-  addMapClouds();
+const PLAYER_COLORS  = ['#ff6b6b','#4ecdc4','#ffd700','#c084fc'];
+const PLAYER_AVATARS = ['🦊','🐺','🦁','🐻','🐉','👾','🤖','🦋'];
+
+/* ═════════════════════════════════════════
+   BOARD DEFINITION (30 spaces, 5×6 snake)
+═════════════════════════════════════════ */
+const BOARD = [
+  // Row 1 → left to right
+  { type:'start',    cat:null },
+  { type:'question', cat:'grundwissen' },
+  { type:'question', cat:'sport' },
+  { type:'duel',     cat:null },
+  { type:'question', cat:'musik' },
+  { type:'question', cat:'humor' },
+  // Row 2 → right to left
+  { type:'question', cat:'geschichte' },
+  { type:'bonus',    cat:'grundwissen' },
+  { type:'question', cat:'kultur' },
+  { type:'event',    cat:null },
+  { type:'question', cat:'sport' },
+  { type:'question', cat:'musik' },
+  // Row 3 → left to right
+  { type:'question', cat:'humor' },
+  { type:'duel',     cat:null },
+  { type:'bonus',    cat:'sport' },
+  { type:'question', cat:'geschichte' },
+  { type:'question', cat:'kultur' },
+  { type:'question', cat:'grundwissen' },
+  // Row 4 → right to left
+  { type:'event',    cat:null },
+  { type:'question', cat:'musik' },
+  { type:'question', cat:'humor' },
+  { type:'duel',     cat:null },
+  { type:'bonus',    cat:'musik' },
+  { type:'question', cat:'geschichte' },
+  // Row 5 → left to right
+  { type:'question', cat:'grundwissen' },
+  { type:'question', cat:'sport' },
+  { type:'duel',     cat:null },
+  { type:'bonus',    cat:'humor' },
+  { type:'event',    cat:null },
+  { type:'end',      cat:null },
+];
+
+/* ═════════════════════════════════════════
+   ARD EVENT CARDS
+═════════════════════════════════════════ */
+const ARD_EVENTS = [
+  {
+    id:'breaking-news', emoji:'📢',
+    title:'Tagesschau Extra!',
+    desc:'Die nächste Frage für ALLE zählt 4 Punkte statt 2!',
+    effect:'bonus_next_global',
+  },
+  {
+    id:'bundesliga', emoji:'🏆',
+    title:'Bundesliga-Finale!',
+    desc:'Alle Spieler rücken sofort 2 Felder vor!',
+    effect:'all_advance_2',
+  },
+  {
+    id:'kabarett', emoji:'🎭',
+    title:'Kabarett-Abend!',
+    desc:'Der Letzte darf 3 Punkte vom Führenden stehlen!',
+    effect:'last_steals_leader',
+  },
+  {
+    id:'starprogramm', emoji:'⭐',
+    title:'Starprogramm!',
+    desc:'Alle Spieler bekommen sofort +2 Punkte!',
+    effect:'all_gain_2',
+  },
+  {
+    id:'sendepause', emoji:'📺',
+    title:'Sendepause!',
+    desc:'Der nächste Spieler setzt eine Runde aus.',
+    effect:'skip_next',
+  },
+  {
+    id:'schwarzer-peter', emoji:'🃏',
+    title:'Schwarzer Peter!',
+    desc:'Der Führende verliert 3 Punkte!',
+    effect:'leader_loses_3',
+  },
+  {
+    id:'shuffle', emoji:'🔀',
+    title:'Mediathek Shuffle!',
+    desc:'Alle Spieler tauschen ihre Positionen auf dem Brett!',
+    effect:'shuffle_positions',
+  },
+];
+
+/* ═════════════════════════════════════════
+   GAME STATE
+═════════════════════════════════════════ */
+let DATA = null;
+
+let gameState = {
+  players: [],
+  currentPlayerIdx: 0,
+  phase: 'roll',
+  seenQuestions: [],
+  eventDeck: [],
+  finalRoundTriggered: false,
+  finalRoundCount: 0,
+  skipNextPlayer: false,
+  bonusNextGlobal: false,
+  pendingDuel: null,
+};
+
+function currentPlayer() {
+  return gameState.players[gameState.currentPlayerIdx];
 }
 
-function generateStars() {
-  const c = document.getElementById('map-stars');
-  if (c.childElementCount > 0) return;
-  for (let i = 0; i < 65; i++) {
-    const s  = document.createElement('div');
-    s.className = 'map-star';
-    const sz = 1 + Math.random() * 2.5;
-    s.style.cssText = `
-      width:${sz}px; height:${sz}px;
-      left:${(Math.random()*98).toFixed(1)}%;
-      top:${(Math.random()*98).toFixed(1)}%;
-      animation-delay:${(Math.random()*7).toFixed(2)}s;
-      animation-duration:${(2.5+Math.random()*4).toFixed(2)}s;
-    `;
-    c.appendChild(s);
-  }
-}
-
-function renderZoneGlows() {
-  const c = document.getElementById('map-glows');
-  c.innerHTML = '';
-  DATA.categories.forEach(cat => {
-    const pos = NODE_POS[cat.id];
-    const w   = WORLDS[cat.id];
-    const d   = document.createElement('div');
-    d.className = 'zone-glow';
-    const sz = w.zoneSize;
-    d.style.cssText = `
-      left:${pos.x}%; top:${pos.y}%;
-      width:${sz}px; height:${sz}px;
-      background: radial-gradient(circle, ${w.zoneFill} 0%, transparent 70%);
-      animation-delay:${(Math.random()*5).toFixed(2)}s;
-    `;
-    c.appendChild(d);
-  });
-}
-
-function renderPaths() {
-  const svg = document.getElementById('map-paths');
-  svg.innerHTML = '';
-  const mw = document.getElementById('map-world');
-  const W  = mw.offsetWidth, H = mw.offsetHeight;
-
-  CONNECTIONS.forEach(([a, b]) => {
-    const pa = NODE_POS[a], pb = NODE_POS[b];
-    const x1 = (pa.x/100)*W, y1 = (pa.y/100)*H;
-    const x2 = (pb.x/100)*W, y2 = (pb.y/100)*H;
-    const unlocked = isUnlocked(b);
-
-    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
-    line.setAttribute('x1',x1); line.setAttribute('y1',y1);
-    line.setAttribute('x2',x2); line.setAttribute('y2',y2);
-    line.setAttribute('stroke', unlocked ? WORLDS[a].accent : 'rgba(255,255,255,0.15)');
-    line.setAttribute('stroke-width','2');
-    line.classList.add('map-path', ...(unlocked ? [] : ['locked']));
-    svg.appendChild(line);
-  });
-}
-
-function renderNodes() {
-  const container = document.getElementById('map-nodes');
-  container.innerHTML = '';
-
-  DATA.categories.forEach(cat => {
-    const pos      = NODE_POS[cat.id];
-    const w        = WORLDS[cat.id];
-    const unlocked = isUnlocked(cat.id);
-    const score    = Math.min(state.scores[cat.id] || 0, 5);
-    const isCur    = cat.id === currentMapNode;
-
-    const r = 26, circ = 2 * Math.PI * r;
-    const filled = (score / 5) * circ;
-    const gap    = circ - filled;
-
-    const node = document.createElement('div');
-    node.className =
-      `map-node${!unlocked ? ' node-locked' : ''}${isCur ? ' node-current' : ''}`;
-    node.style.left = pos.x + '%';
-    node.style.top  = pos.y + '%';
-    node.style.setProperty('--node-glow', w.nodeGlow);
-
-    node.innerHTML = `
-      <div class="node-ring">
-        <svg class="node-ring-svg" viewBox="0 0 64 64" fill="none">
-          <circle cx="32" cy="32" r="28"
-            fill="${w.nodeBg}"
-            stroke="rgba(255,255,255,0.07)" stroke-width="1.5"/>
-          <circle cx="32" cy="32" r="${r}" fill="none"
-            stroke="${unlocked ? w.accent : 'rgba(255,255,255,0.1)'}"
-            stroke-width="3"
-            stroke-dasharray="${filled.toFixed(1)} ${gap.toFixed(1)}"
-            transform="rotate(-90 32 32)"
-            stroke-linecap="round"/>
-        </svg>
-        <div class="node-fill" style="--node-bg:${w.nodeBg}"></div>
-        <div class="node-emoji">${unlocked ? cat.emoji : '🔒'}</div>
-      </div>
-      <div class="node-label">${cat.label}</div>
-    `;
-
-    node.addEventListener('click', () => movePlayerTo(cat.id));
-    container.appendChild(node);
-  });
-}
-
-function positionPlayer(animate) {
-  const player = document.getElementById('player');
-  const mw     = document.getElementById('map-world');
-  const pos    = NODE_POS[currentMapNode];
-  const W = mw.offsetWidth, H = mw.offsetHeight;
-  const x = (pos.x / 100) * W;
-  const y = (pos.y / 100) * H - 44;
-
-  player.style.transition = animate
-    ? 'left 0.55s cubic-bezier(0.25,0.46,0.45,0.94), top 0.55s cubic-bezier(0.25,0.46,0.45,0.94)'
-    : 'none';
-  player.style.left = x + 'px';
-  player.style.top  = y + 'px';
-}
-
-function movePlayerTo(catId) {
-  if (catId === currentMapNode) {
-    if (isUnlocked(catId)) startRun(catId);
-    return;
-  }
-  addPlayerSparkleTrail();
-  synthNav();
-  currentMapNode = catId;
-  renderNodes();
-  positionPlayer(true);
-  renderMissionHUD();
-  renderPaths();
-}
-
-function renderMissionHUD() {
-  const cat      = DATA.categories.find(c => c.id === currentMapNode);
-  const story    = WORLD_STORY[currentMapNode];
-  const w        = WORLDS[currentMapNode];
-  const unlocked = isUnlocked(currentMapNode);
-  const hud      = document.getElementById('mission-hud');
-
-  document.getElementById('mission-title').textContent =
-    `${cat.emoji} ${cat.label} — ${story.subtitle}`;
-  document.getElementById('mission-text').textContent      = story.text;
-  document.getElementById('mission-objective').textContent = story.objective;
-  document.getElementById('mission-bonus').textContent     = story.bonus;
-
-  const btn = document.getElementById('btn-enter-world');
-  if (unlocked) {
-    btn.textContent      = 'Betreten →';
-    btn.disabled         = false;
-    btn.style.background = w.btnBg;
-    btn.style.color      = w.btnText;
-    btn.style.boxShadow  = `0 4px 22px ${w.accentGlow}55`;
-  } else {
-    btn.textContent      = unlockHintText(currentMapNode);
-    btn.disabled         = true;
-    btn.style.background = 'rgba(255,255,255,0.05)';
-    btn.style.color      = 'rgba(255,255,255,0.28)';
-    btn.style.boxShadow  = 'none';
-  }
-
-  const comboEl = document.getElementById('mission-combo');
-  if (comboEl) {
-    if (state.streak >= 2) {
-      comboEl.textContent   = `🔥 ×${state.streak}`;
-      comboEl.style.display = 'block';
-    } else {
-      comboEl.style.display = 'none';
+function nextTurn() {
+  // Check win after final round countdown
+  if (gameState.finalRoundTriggered) {
+    gameState.finalRoundCount--;
+    if (gameState.finalRoundCount <= 0) {
+      endGame();
+      return;
     }
   }
 
-  hud.classList.add('visible');
-}
+  let next = (gameState.currentPlayerIdx + 1) % gameState.players.length;
 
-function setupKeyboard() {
-  document.onkeydown = e => {
-    if (!document.getElementById('screen-map').classList.contains('active')) return;
-    const idx = PATH.indexOf(currentMapNode);
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-      const next = PATH[idx + 1];
-      if (next) movePlayerTo(next);
-    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-      const prev = PATH[idx - 1];
-      if (prev) movePlayerTo(prev);
-    } else if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      App.enterCurrentWorld();
-    }
-  };
-}
+  // Skip next player event effect
+  if (gameState.skipNextPlayer) {
+    gameState.skipNextPlayer = false;
+    const skipped = gameState.players[next];
+    showNarrator(`${skipped.avatar} ${skipped.name} setzt diese Runde aus! 📺`, 2000);
+    next = (next + 1) % gameState.players.length;
+  }
 
-function setupSwipe() {
-  const mw = document.getElementById('map-world');
-  let sx = 0, sy = 0;
-  mw.addEventListener('touchstart', e => {
-    sx = e.touches[0].clientX; sy = e.touches[0].clientY;
-  }, { passive: true });
-  mw.addEventListener('touchend', e => {
-    const dx  = sx - e.changedTouches[0].clientX;
-    const dy  = sy - e.changedTouches[0].clientY;
-    const idx = PATH.indexOf(currentMapNode);
-    if (Math.abs(dx) > Math.abs(dy)) {
-      if (dx >  45 && PATH[idx+1]) movePlayerTo(PATH[idx+1]);
-      if (dx < -45 && PATH[idx-1]) movePlayerTo(PATH[idx-1]);
-    } else {
-      if (dy >  45 && PATH[idx+1]) movePlayerTo(PATH[idx+1]);
-      if (dy < -45 && PATH[idx-1]) movePlayerTo(PATH[idx-1]);
-    }
-  }, { passive: true });
+  gameState.currentPlayerIdx = next;
+  gameState.phase = 'roll';
+  updateTurnControls();
+  updateScoreStrip();
 }
 
 /* ═════════════════════════════════════════
-   RUN SYSTEM  –  5 levels per world
+   SCREEN MANAGEMENT
 ═════════════════════════════════════════ */
-function startRun(catId) {
-  const w   = WORLDS[catId];
-  const cat = DATA.categories.find(c => c.id === catId);
-
-  // Pick RUN_LENGTH unseen questions (reset pool if needed)
-  const all  = DATA.questions.filter(q => q.category === catId);
-  let pool   = all.filter(q => !state.seen.includes(q.id));
-  if (pool.length < RUN_LENGTH) {
-    state.seen = state.seen.filter(id => !all.map(q => q.id).includes(id));
-    saveState();
-    pool = [...all];
-  }
-  const shuffled  = pool.sort(() => Math.random() - 0.5);
-  const questions = shuffled.slice(0, RUN_LENGTH);
-
-  currentRun = { catId, questions, levelIdx: 0, correct: 0, results: [] };
-  applyWorldTheme(w);
-
-  // Init audio context on user gesture
-  getAudioCtx();
-
-  // Battle intro → narrator → quiz
-  battleIntro(catId, () => {
-    createAmbientElements(catId);
-    showNarrator('Das Abenteuer beginnt! Zeig, was du weißt... 🗡️', 2200);
-    showQuizLevel();
-  });
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
 }
 
-function showQuizLevel() {
-  const { catId, questions, levelIdx } = currentRun;
-  const q   = questions[levelIdx];
-  const w   = WORLDS[catId];
-  const cat = DATA.categories.find(c => c.id === catId);
-
-  /* topbar */
-  document.getElementById('battle-world-name').textContent = `${cat.emoji} ${cat.label}`;
-  document.getElementById('quiz-points').textContent       = state.points;
-
-  /* level label + pips + HP bar */
-  document.getElementById('level-track-label').textContent =
-    `LEVEL ${levelIdx + 1} / ${RUN_LENGTH}`;
-  updatePips();
-
-  /* content card */
-  document.getElementById('quiz-source').textContent = q.title;
-  const link = document.getElementById('content-link');
-  link.href        = q.url;
-  link.textContent = 'ardmediathek.de →';
-
-  /* render options FIRST (hidden), then typewriter */
-  const optsEl = document.getElementById('quiz-options');
-  optsEl.innerHTML = '';
-  optsEl.classList.add('hidden'); // dimmed + non-interactive during typewriter
-
-  q.options.forEach((opt, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'option-btn';
-    btn.innerHTML = `
-      <span class="option-letter">${LETTERS[i]}</span>
-      <span class="option-text">${opt}</span>
-    `;
-    btn.addEventListener('click', () => submitAnswer(i, btn));
-    optsEl.appendChild(btn);
-  });
-
-  const isBoss = levelIdx === RUN_LENGTH - 1;
-
-  showScreen('screen-quiz');
-
-  const doTypewriter = () => {
-    if (isBoss) {
-      showNarrator('Die entscheidende Frage... jetzt oder nie! ⚔️', 2200);
-      document.getElementById('screen-quiz').classList.add('boss-mode');
-      startBossTimer();
-    } else {
-      document.getElementById('screen-quiz').classList.remove('boss-mode');
-      hideBossTimer();
-    }
-
-    typewriterQuestion(q.question, () => {
-      optsEl.classList.remove('hidden');
-      optsEl.querySelectorAll('.option-btn').forEach((btn, i) => {
-        btn.style.opacity        = '0';
-        btn.style.animation      = 'none';
-        void btn.offsetWidth;
-        btn.style.animation      = 'optionIn 0.32s ease forwards';
-        btn.style.animationDelay = `${i * 80}ms`;
-      });
-    });
-  };
-
-  if (isBoss) {
-    showBossWarning(doTypewriter);
-  } else {
-    doTypewriter();
-  }
-}
-
-function updatePips() {
-  const pips = document.querySelectorAll('.pip');
-  const { levelIdx, results } = currentRun;
-  pips.forEach((pip, i) => {
-    pip.className = 'pip';
-    if (i < results.length) {
-      pip.classList.add('done', results[i] ? 'correct' : 'wrong');
-    } else if (i === levelIdx) {
-      pip.classList.add('current');
-    }
-  });
-  updateHpBar(levelIdx);
-}
-
-function submitAnswer(selectedIndex, clickedBtn) {
-  // Disable all options immediately
-  document.querySelectorAll('.option-btn').forEach(b => (b.disabled = true));
-
-  // Lock-in state: brief pulse before reveal
-  clickedBtn.classList.add('locking');
-
-  setTimeout(() => {
-    clickedBtn.classList.remove('locking');
-    revealAnswer(selectedIndex, clickedBtn);
-  }, 300);
-}
-
-function revealAnswer(selectedIndex, clickedBtn) {
-  const q          = currentRun.questions[currentRun.levelIdx];
-  const correct    = selectedIndex === q.correctIndex;
-  const prevStreak = state.streak;
-  const isBoss     = currentRun.levelIdx === RUN_LENGTH - 1;
-
-  hideBossTimer();
-
-  document.querySelectorAll('.option-btn')[q.correctIndex].classList.add('correct');
-  if (!correct) clickedBtn.classList.add('wrong');
-
-  currentRun.results.push(correct);
-
-  if (correct) {
-    state.points  += 1;
-    state.streak  += 1;
-    if (state.streak > state.maxStreak) state.maxStreak = state.streak;
-    if (state.streak % 3 === 0) state.points += 1; // combo bonus
-    currentRun.correct += 1;
-
-    flashScreen('correct');
-    createSparkles(clickedBtn);
-    synthCorrect();
-    if (navigator.vibrate) navigator.vibrate(50);
-
-    // Combo explosion at milestones
-    if (state.streak === 3 || state.streak === 5 || state.streak === 7 ||
-        (state.streak > 7 && state.streak % 2 === 0)) {
-      triggerComboExplosion(state.streak);
-    }
-
-    // Narrator for streak milestones (only first time each level)
-    if (state.streak === 3) {
-      showNarrator('Unaufhaltbar! Du bist im Feuer! 🔥', 2000);
-    } else if (state.streak === 5) {
-      showNarrator('LEGENDÄR! Absolut unschlagbar! ⭐', 2200);
-    } else if (state.streak === 10) {
-      showNarrator('ZEH IN EINER REIHE! Du bist ein Gott! 🌟', 2500);
-    }
-
-    if (isBoss) {
-      setTimeout(() => showNarrator('BOSS besiegt! Außergewöhnlich! 🏆', 2500), 400);
-    }
-  } else {
-    showStreakBreakDrama(prevStreak);
-    state.streak = 0;
-    flashScreen('wrong');
-    shakeScreen();
-    synthWrong();
-    if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
-
-    // Screen crack when HP is low
-    const hpPct = ((RUN_LENGTH - currentRun.levelIdx) / RUN_LENGTH) * 100;
-    if (hpPct <= 40) showScreenCrack();
-
-    if (isBoss) {
-      setTimeout(() => showNarrator('So nah dran... Beim nächsten Mal! 💪', 2200), 400);
-    }
-  }
-
-  if (!state.seen.includes(q.id)) state.seen.push(q.id);
-  saveState();
-
-  setTimeout(() => showFeedback(correct), 700);
-}
-
-function showFeedback(correct) {
-  const { catId, levelIdx, results, questions } = currentRun;
-  const q      = questions[levelIdx];
-  const w      = WORLDS[catId];
-  const isLast = levelIdx === RUN_LENGTH - 1;
-
-  const streak   = state.streak;
-  const combo    = correct && streak >= 2 ? ` · Combo ×${streak}` : '';
-  const bonusTxt = correct && streak > 0 && streak % 3 === 0 ? ' (+1 ⭐)' : '';
-
-  document.getElementById('fb-icon').textContent =
-    correct ? (streak >= 3 ? '🔥' : '🎉') : '😌';
-
-  const result = document.getElementById('fb-result');
-  result.textContent  = correct ? `Richtig!${combo}${bonusTxt}` : 'Leider falsch.';
-  result.style.animation = 'none';
-  void result.offsetWidth;
-  result.style.animation = '';
-
-  const cl = document.getElementById('fb-correct-label');
-  if (!correct) {
-    cl.textContent    = `✓ ${q.options[q.correctIndex]}`;
-    cl.style.display  = 'block';
-  } else {
-    cl.style.display  = 'none';
-  }
-
-  document.getElementById('fb-insight').textContent       = q.insight;
-  document.getElementById('insight-bar').style.background = w.accent;
-
-  const link = document.getElementById('fb-link');
-  link.href        = q.url;
-  link.textContent = `${q.title} →`;
-
-  /* Weiter button */
-  const btn = document.getElementById('btn-weiter');
-  if (isLast) {
-    btn.textContent      = 'Welt abschließen →';
-    btn.style.background = w.btnBg;
-    btn.style.color      = w.btnText;
-    btn.style.border     = 'none';
-    btn.style.boxShadow  = `0 4px 20px ${w.accentGlow}55`;
-  } else {
-    btn.textContent      = `Level ${levelIdx + 2} / ${RUN_LENGTH} →`;
-    btn.style.background = 'rgba(255,255,255,0.1)';
-    btn.style.color      = '#fff';
-    btn.style.border     = '1px solid rgba(255,255,255,0.12)';
-    btn.style.boxShadow  = 'none';
-  }
-
-  /* +1 float */
-  if (correct) {
-    const pf = document.getElementById('point-float');
-    pf.classList.remove('floating');
-    void pf.offsetWidth;
-    pf.classList.add('floating');
-    setTimeout(() => pf.classList.remove('floating'), 1200);
-  }
-
-  updatePips();
-  document.getElementById('quiz-points').textContent = state.points;
-  showScreen('screen-feedback');
-}
-
-function nextLevel() {
-  currentRun.levelIdx += 1;
-  showQuizLevel();
-}
-
-function finishRun() {
-  const { catId, correct } = currentRun;
-  const w = WORLDS[catId];
-
-  const unlockedBefore = DATA.categories.map(c => ({ id: c.id, was: isUnlocked(c.id) }));
-
-  state.scores[catId] = Math.max(state.scores[catId] || 0, correct);
-  state.streak = 0;
-  saveState();
-
-  const newUnlocks = DATA.categories.filter(c => {
-    const before = unlockedBefore.find(u => u.id === c.id);
-    return before && !before.was && isUnlocked(c.id);
-  });
-
-  clearAmbient();
-
-  // Store unlocks for map animation
-  _pendingUnlockAnimations = newUnlocks.map(c => c.id);
-
-  showCompletion(correct, newUnlocks, w);
-}
-
-function showCompletion(correct, newUnlocks, w) {
-  applyWorldTheme(w);
-
-  const bg = document.getElementById('complete-bg');
-  bg.style.cssText = `
-    position:absolute;inset:0;
-    background: radial-gradient(ellipse at 50% 40%, ${w.accentGlow}35 0%, transparent 65%);
-    pointer-events:none;z-index:0;
-  `;
-
-  const trophies = ['😅','😤','🌟','🏅','🥇','🏆'];
-  document.getElementById('complete-trophy').textContent = trophies[correct] || '🏆';
-
-  document.getElementById('complete-title').textContent =
-    correct >= 4 ? 'Welt gemeistert!' :
-    correct >= 2 ? 'Welt beendet!'    : 'Weiter kämpfen!';
-
-  /* Stars with staggered delay */
-  const starsEl = document.getElementById('complete-stars');
-  starsEl.innerHTML = '';
-  for (let i = 0; i < RUN_LENGTH; i++) {
-    const s = document.createElement('span');
-    s.className = `complete-star${i >= correct ? ' empty' : ''}`;
-    s.textContent = '⭐';
-    s.style.animationDelay = `${0.35 + i * 0.12}s`;
-    starsEl.appendChild(s);
-  }
-
-  document.getElementById('complete-fraction').textContent =
-    `${correct} von ${RUN_LENGTH} Fragen richtig`;
-
-  /* Unlocks */
-  const unlocksEl = document.getElementById('complete-unlocks');
-  unlocksEl.innerHTML = '';
-  newUnlocks.forEach(cat => {
-    const uw  = WORLDS[cat.id];
-    const tag = document.createElement('div');
-    tag.className = 'unlock-tag';
-    tag.style.borderColor = uw.accent + '55';
-    tag.innerHTML = `
-      <span class="unlock-tag-icon">${cat.emoji}</span>
-      <span><strong>${cat.label}</strong> freigeschaltet!</span>
-    `;
-    unlocksEl.appendChild(tag);
-  });
-
-  showScreen('screen-complete');
-
-  // Confetti for decent scores
-  if (correct >= 3) {
-    setTimeout(() => launchConfetti(w), 350);
-  }
-
-  // Narrator for run result
-  if (correct === 5) {
-    setTimeout(() => {
-      synthUnlock();
-      showNarrator('PERFEKTION. Außergewöhnlich. Du bist unaufhaltbar! 🌟', 3000);
-    }, 600);
-  } else if (correct === 0) {
-    setTimeout(() => showNarrator('Manchmal muss man fallen, um zu fliegen. Nochmal! 💪', 2500), 600);
-  } else if (correct >= 4) {
-    setTimeout(() => showNarrator('Fast perfekt! Beeindruckend. 🌟', 2000), 600);
-  }
-
-  // Unlock narrator
-  if (newUnlocks.length > 0) {
-    setTimeout(() => {
-      synthUnlock();
-      showNarrator('Eine neue Welt öffnet sich vor dir! ✨', 2800);
-    }, 1200);
-  }
+function hideAllOverlays() {
+  document.getElementById('question-sheet').classList.remove('qs-active');
+  document.getElementById('target-overlay').classList.remove('to-active');
+  document.getElementById('event-overlay').classList.remove('eo-active');
 }
 
 /* ═════════════════════════════════════════
-   WHEEL OF LIFE
+   START PARTICLES
 ═════════════════════════════════════════ */
-function renderWheel() {
-  document.getElementById('wheel-points').textContent = state.points;
-  const svg = document.getElementById('wheel-svg');
-  svg.innerHTML = '';
-
-  const cx = 200, cy = 200, outerR = 152, innerR = 46;
-  const n = DATA.categories.length;
-  const anglePer = (2 * Math.PI) / n;
-  const startOff = -Math.PI / 2;
-
-  const defs = makeSVGEl('defs',{});
-  defs.innerHTML = `
-    <filter id="glow" x="-25%" y="-25%" width="150%" height="150%">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>`;
-  svg.appendChild(defs);
-  svg.appendChild(makeSVGEl('circle',{cx,cy,r:outerR,
-    fill:'rgba(255,255,255,0.03)',stroke:'rgba(255,255,255,0.05)','stroke-width':1}));
-
-  const segs = [];
-  DATA.categories.forEach((cat, i) => {
-    const w       = WORLDS[cat.id];
-    const sa      = startOff + i * anglePer;
-    const ea      = sa + anglePer;
-    const score   = Math.min(state.scores[cat.id] || 0, 5);
-    const fillPct = score / 5;
-
-    const bg = makeSector(cx,cy,innerR,outerR,sa,ea);
-    bg.setAttribute('fill', w.accentGlow);
-    bg.setAttribute('fill-opacity','0.1');
-    bg.classList.add('wheel-seg'); svg.appendChild(bg); segs.push(bg);
-
-    if (fillPct > 0) {
-      const fr   = innerR + (outerR - innerR) * fillPct;
-      const fill = makeSector(cx,cy,innerR,fr,sa,ea);
-      fill.setAttribute('fill', w.accent);
-      fill.setAttribute('fill-opacity','0.88');
-      fill.setAttribute('filter','url(#glow)');
-      fill.classList.add('wheel-seg'); svg.appendChild(fill); segs.push(fill);
-    }
-
-    const p1 = polar(cx,cy,innerR,sa), p2 = polar(cx,cy,outerR,sa);
-    svg.appendChild(makeSVGEl('line',{
-      x1:p1.x,y1:p1.y,x2:p2.x,y2:p2.y,
-      stroke:'rgba(0,0,0,0.5)','stroke-width':1.5
-    }));
-
-    const mp = polar(cx,cy,outerR+18,(sa+ea)/2);
-    const t  = makeSVGEl('text',{
-      x:mp.x, y:mp.y,
-      'text-anchor':'middle','dominant-baseline':'middle','font-size':16
-    });
-    t.textContent = cat.emoji; svg.appendChild(t);
-  });
-
-  svg.appendChild(makeSVGEl('circle',{cx,cy,r:innerR,
-    fill:'#080812',stroke:'rgba(255,255,255,0.07)','stroke-width':1.5}));
-  const cPts = makeSVGEl('text',{x:cx,y:cy-6,'text-anchor':'middle',
-    'font-size':20,'font-weight':700,fill:'#ffd700'});
-  cPts.textContent = state.points; svg.appendChild(cPts);
-  const cLbl = makeSVGEl('text',{x:cx,y:cy+11,'text-anchor':'middle',
-    'font-size':10,fill:'rgba(255,255,255,0.3)'});
-  cLbl.textContent = 'Punkte'; svg.appendChild(cLbl);
-
-  setTimeout(() => {
-    segs.forEach((s,i) => setTimeout(() => s.classList.add('visible'), i*65));
-  }, 80);
-
-  const leg = document.getElementById('wheel-legend');
-  leg.innerHTML = '';
-  DATA.categories.forEach(cat => {
-    const w     = WORLDS[cat.id];
-    const score = Math.min(state.scores[cat.id]||0,5);
-    const item  = document.createElement('div');
-    item.className = 'legend-item';
-    item.innerHTML = `
-      <span class="legend-dot" style="background:${w.accent}"></span>
-      <span>${cat.label}: ${score}/${RUN_LENGTH}</span>`;
-    leg.appendChild(item);
-  });
-}
-
-/* ─── SVG helpers ─── */
-function polar(cx,cy,r,a)  { return { x:cx+r*Math.cos(a), y:cy+r*Math.sin(a) }; }
-function makeSector(cx,cy,r1,r2,sa,ea) {
-  const p1=polar(cx,cy,r2,sa), p2=polar(cx,cy,r2,ea),
-        p3=polar(cx,cy,r1,ea), p4=polar(cx,cy,r1,sa);
-  const la = (ea-sa > Math.PI) ? 1 : 0;
-  const d  = [
-    `M ${p4.x} ${p4.y}`, `L ${p1.x} ${p1.y}`,
-    `A ${r2} ${r2} 0 ${la} 1 ${p2.x} ${p2.y}`,
-    `L ${p3.x} ${p3.y}`, `A ${r1} ${r1} 0 ${la} 0 ${p4.x} ${p4.y}`, 'Z'
-  ].join(' ');
-  const path = document.createElementNS('http://www.w3.org/2000/svg','path');
-  path.setAttribute('d',d); return path;
-}
-function makeSVGEl(tag,attrs) {
-  const el = document.createElementNS('http://www.w3.org/2000/svg',tag);
-  Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v)); return el;
-}
-
-/* ─── Animation helpers ─── */
-function createSparkles(btn) {
-  const rect = btn.getBoundingClientRect();
-  const cx   = rect.left + rect.width  / 2;
-  const cy   = rect.top  + rect.height / 2;
-  const w    = WORLDS[currentRun.catId];
-  for (let i = 0; i < 10; i++) {
-    const angle = (i / 10) * 2 * Math.PI + (Math.random() * 0.3);
-    const dist  = 44 + Math.random() * 32;
-    const spark = document.createElement('div');
-    spark.className = 'spark';
-    spark.style.cssText = `
-      left:${cx}px; top:${cy}px; background:${i % 2 === 0 ? w.accent : '#ffd700'};
-      --dx:${(Math.cos(angle)*dist).toFixed(1)}px;
-      --dy:${(Math.sin(angle)*dist).toFixed(1)}px;
-    `;
-    document.body.appendChild(spark);
-    requestAnimationFrame(() => spark.classList.add('burst'));
-    setTimeout(() => spark.remove(), 650);
-  }
-}
-
-function shakeScreen() {
-  const el = document.getElementById('screen-quiz');
-  el.classList.remove('shake');
-  void el.offsetWidth;
-  el.classList.add('shake');
-  setTimeout(() => el.classList.remove('shake'), 500);
-}
-
-/* ─── Start screen particles ─── */
-function createParticles() {
-  const c = document.getElementById('particles');
+function createParticles(containerId) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
   for (let i = 0; i < 22; i++) {
     const p  = document.createElement('div');
     p.className = 'particle';
     const sz = 2 + Math.random() * 4;
-    // Blue-tinted particles to match ARD brand
     const blue = Math.random() > 0.4;
     p.style.cssText = `
-      width:${sz}px; height:${sz}px;
+      width:${sz}px;height:${sz}px;
       left:${(Math.random()*100).toFixed(1)}%;
       bottom:${(Math.random()*40).toFixed(1)}%;
-      background:${blue ? `rgba(0,100,255,${(0.3+Math.random()*0.5).toFixed(2)})` : `rgba(255,255,255,${(0.2+Math.random()*0.4).toFixed(2)})`};
+      background:${blue?`rgba(0,100,255,${(0.3+Math.random()*0.5).toFixed(2)})`:`rgba(255,255,255,${(0.2+Math.random()*0.4).toFixed(2)})`};
       animation-delay:${(Math.random()*12).toFixed(2)}s;
       animation-duration:${(8+Math.random()*9).toFixed(2)}s;
     `;
@@ -1414,91 +304,854 @@ function createParticles() {
 }
 
 /* ═════════════════════════════════════════
-   Public App interface
+   SETUP SCREEN
 ═════════════════════════════════════════ */
-const App = {
-  goMap() {
-    currentRun = null;
-    clearAmbient();
-    if (_typerInterval) { clearInterval(_typerInterval); _typerInterval = null; }
-    const mp = document.getElementById('map-points');
-    if (mp) mp.textContent = state.points;
-    renderMap();
-    showScreen('screen-map');
-    requestAnimationFrame(() => { renderPaths(); positionPlayer(false); });
+let setupPlayerCount = 2;
+let setupPlayers = [
+  { name:'', avatar:'🦊', color: PLAYER_COLORS[0] },
+  { name:'', avatar:'🐺', color: PLAYER_COLORS[1] },
+  { name:'', avatar:'🦁', color: PLAYER_COLORS[2] },
+  { name:'', avatar:'🐻', color: PLAYER_COLORS[3] },
+];
 
-    // Fire pending unlock animations
-    if (_pendingUnlockAnimations.length > 0) {
-      setTimeout(() => {
-        _pendingUnlockAnimations.forEach(catId => animateMapUnlock(catId));
-        _pendingUnlockAnimations = [];
-      }, 700);
+function renderSetup() {
+  const body = document.getElementById('setup-body');
+  body.innerHTML = '';
+
+  // Player count picker
+  const countWrap = document.createElement('div');
+  countWrap.className = 'setup-count-wrap';
+  countWrap.innerHTML = `<div class="setup-section-label">Wie viele Spieler?</div>`;
+  const countBtns = document.createElement('div');
+  countBtns.className = 'setup-count-btns';
+  [2,3,4].forEach(n => {
+    const btn = document.createElement('button');
+    btn.className = `setup-count-btn${n === setupPlayerCount ? ' active' : ''}`;
+    btn.textContent = n;
+    btn.onclick = () => { setupPlayerCount = n; renderSetup(); };
+    countBtns.appendChild(btn);
+  });
+  countWrap.appendChild(countBtns);
+  body.appendChild(countWrap);
+
+  // Player entries
+  const entriesLabel = document.createElement('div');
+  entriesLabel.className = 'setup-section-label';
+  entriesLabel.textContent = 'Spieler benennen:';
+  body.appendChild(entriesLabel);
+
+  for (let i = 0; i < setupPlayerCount; i++) {
+    const p = setupPlayers[i];
+    const card = document.createElement('div');
+    card.className = 'setup-player-card';
+    card.style.borderColor = p.color;
+
+    // Avatar picker
+    const avatarRow = document.createElement('div');
+    avatarRow.className = 'setup-avatar-row';
+    PLAYER_AVATARS.forEach(av => {
+      const avBtn = document.createElement('button');
+      avBtn.className = `setup-avatar-btn${av === p.avatar ? ' active' : ''}`;
+      avBtn.textContent = av;
+      avBtn.style.borderColor = av === p.avatar ? p.color : 'transparent';
+      avBtn.onclick = () => { setupPlayers[i].avatar = av; renderSetup(); };
+      avatarRow.appendChild(avBtn);
+    });
+
+    // Name input
+    const nameInput = document.createElement('input');
+    nameInput.className = 'setup-name-input';
+    nameInput.type = 'text';
+    nameInput.maxLength = 12;
+    nameInput.placeholder = `Spieler ${i+1}`;
+    nameInput.value = p.name;
+    nameInput.style.borderColor = p.color;
+    nameInput.oninput = (e) => { setupPlayers[i].name = e.target.value; };
+
+    // Player number badge
+    const badge = document.createElement('div');
+    badge.className = 'setup-player-num';
+    badge.style.background = p.color;
+    badge.textContent = `P${i+1} ${p.avatar}`;
+
+    card.appendChild(badge);
+    card.appendChild(nameInput);
+    card.appendChild(avatarRow);
+    body.appendChild(card);
+  }
+}
+
+/* ═════════════════════════════════════════
+   BOARD RENDERING
+═════════════════════════════════════════ */
+function getGridPos(idx) {
+  const row = Math.floor(idx / 6);
+  const col  = idx % 6;
+  const displayCol = row % 2 === 0 ? col : 5 - col;
+  return { row: row + 1, col: displayCol + 1 }; // 1-based
+}
+
+function renderBoard() {
+  const grid = document.getElementById('board-grid');
+  grid.innerHTML = '';
+
+  BOARD.forEach((space, idx) => {
+    const { row, col } = getGridPos(idx);
+    const div = document.createElement('div');
+    div.id = `space-${idx}`;
+    div.className = `board-space board-space--${space.type}`;
+    div.style.gridRow    = row;
+    div.style.gridColumn = col;
+
+    let icon = '';
+    let color = 'rgba(255,255,255,0.06)';
+    if (space.type === 'question' || space.type === 'bonus') {
+      const w = WORLDS[space.cat];
+      color = w.accentGlow + '33';
+      div.style.borderColor = w.accentGlow + '55';
+      icon = space.type === 'bonus' ? `<span class="space-bonus-star">⭐</span>${w.emoji}` : w.emoji;
+    } else if (space.type === 'duel')  { icon = '⚔️'; color='rgba(255,80,0,0.18)'; div.style.borderColor='rgba(255,80,0,0.45)'; }
+    else if (space.type === 'event')   { icon = '📺'; color='rgba(0,100,255,0.18)'; div.style.borderColor='rgba(0,100,255,0.45)'; }
+    else if (space.type === 'start')   { icon = '🏁'; color='rgba(255,215,0,0.15)'; div.style.borderColor='rgba(255,215,0,0.5)'; }
+    else if (space.type === 'end')     { icon = '🏆'; color='rgba(255,215,0,0.25)'; div.style.borderColor='rgba(255,215,0,0.8)'; }
+
+    div.style.background = color;
+    div.innerHTML = `<span class="space-icon">${icon}</span><span class="space-num">${idx}</span>`;
+    grid.appendChild(div);
+  });
+
+  renderTokens();
+}
+
+/* ═════════════════════════════════════════
+   TOKEN RENDERING
+═════════════════════════════════════════ */
+function renderTokens() {
+  const layer   = document.getElementById('token-layer');
+  const wrapper = document.getElementById('board-wrapper');
+  if (!layer || !wrapper) return;
+  layer.innerHTML = '';
+
+  // Group players by position
+  const byPos = {};
+  gameState.players.forEach(p => {
+    if (!byPos[p.position]) byPos[p.position] = [];
+    byPos[p.position].push(p);
+  });
+
+  Object.entries(byPos).forEach(([pos, players]) => {
+    const spaceEl = document.getElementById(`space-${pos}`);
+    if (!spaceEl) return;
+    const sRect = spaceEl.getBoundingClientRect();
+    const wRect = wrapper.getBoundingClientRect();
+    const cx = sRect.left - wRect.left + sRect.width / 2;
+    const cy = sRect.top  - wRect.top  + sRect.height / 2;
+    const n  = players.length;
+
+    players.forEach((p, i) => {
+      const offX = n > 1 ? (i - (n-1)/2) * 14 : 0;
+      const offY = 0;
+      const token = document.createElement('div');
+      token.id = `token-${p.id}`;
+      token.className = 'player-token';
+      token.style.cssText = `
+        left:${(cx + offX).toFixed(1)}px;
+        top:${(cy + offY).toFixed(1)}px;
+        background:${p.color};
+        box-shadow: 0 0 12px ${p.color}88;
+      `;
+      token.textContent = p.avatar;
+      if (p.id === currentPlayer().id) token.classList.add('token-active');
+      layer.appendChild(token);
+    });
+  });
+}
+
+/* ═════════════════════════════════════════
+   SCORE STRIP
+═════════════════════════════════════════ */
+function renderScoreStrip() {
+  const strip = document.getElementById('score-strip');
+  strip.innerHTML = '';
+  gameState.players.forEach(p => {
+    const card = document.createElement('div');
+    card.id = `score-card-${p.id}`;
+    card.className = `score-card${p.id === currentPlayer().id ? ' score-card--active' : ''}`;
+    card.style.borderColor = p.color;
+    card.innerHTML = `
+      <span class="sc-avatar">${p.avatar}</span>
+      <span class="sc-name">${p.name || 'Spieler'}</span>
+      <span class="sc-points" id="sc-pts-${p.id}">${p.points} ⭐</span>
+    `;
+    strip.appendChild(card);
+  });
+}
+
+function updateScoreStrip() {
+  gameState.players.forEach(p => {
+    const el = document.getElementById(`sc-pts-${p.id}`);
+    if (el) el.textContent = `${p.points} ⭐`;
+    const card = document.getElementById(`score-card-${p.id}`);
+    if (card) {
+      card.classList.toggle('score-card--active', p.id === currentPlayer().id);
     }
-  },
+  });
+}
 
-  goWheel() {
-    renderWheel();
-    showScreen('screen-wheel');
-  },
+function updateTurnControls() {
+  const cp = currentPlayer();
+  document.getElementById('cp-avatar').textContent = cp.avatar;
+  document.getElementById('cp-name').textContent   = cp.name || `Spieler ${gameState.currentPlayerIdx+1}`;
+  const rollBtn = document.getElementById('roll-btn');
+  rollBtn.style.background = cp.color;
+  rollBtn.disabled = false;
+}
 
-  enterCurrentWorld() {
-    if (isUnlocked(currentMapNode)) startRun(currentMapNode);
-  },
+/* ═════════════════════════════════════════
+   DICE & ROLL
+═════════════════════════════════════════ */
+const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
 
-  abandonRun() {
-    currentRun = null;
-    clearAmbient();
-    if (_typerInterval) { clearInterval(_typerInterval); _typerInterval = null; }
-    App.goMap();
-  },
+function animateDice(finalValue, callback) {
+  const face = document.getElementById('roll-dice-face');
+  let count  = 0;
+  const max  = 12;
+  synthRoll();
+  const iv = setInterval(() => {
+    face.textContent = DICE_FACES[Math.floor(Math.random() * 6)];
+    count++;
+    if (count >= max) {
+      clearInterval(iv);
+      face.textContent = DICE_FACES[finalValue - 1];
+      callback();
+    }
+  }, 60);
+}
 
-  weiterAction() {
-    if (!currentRun) { App.goMap(); return; }
-    const isLast = currentRun.levelIdx === RUN_LENGTH - 1;
-    if (isLast) {
-      finishRun();
+/* ═════════════════════════════════════════
+   MOVE ANIMATION (step by step)
+═════════════════════════════════════════ */
+function animateMove(player, steps, onLand) {
+  if (steps <= 0) { onLand(); return; }
+  const next = Math.min(player.position + 1, BOARD.length - 1);
+  player.position = next;
+  renderTokens();
+  synthNav();
+
+  // Flash the space briefly
+  const spaceEl = document.getElementById(`space-${next}`);
+  if (spaceEl) {
+    spaceEl.classList.add('space-visited');
+    setTimeout(() => spaceEl.classList.remove('space-visited'), 180);
+  }
+
+  setTimeout(() => {
+    if (next === BOARD.length - 1) {
+      onLand();
     } else {
-      nextLevel();
+      animateMove(player, steps - 1, onLand);
     }
+  }, 230);
+}
+
+/* ═════════════════════════════════════════
+   SPACE RESOLUTION
+═════════════════════════════════════════ */
+function resolveSpace(player) {
+  const space = BOARD[player.position];
+  gameState.phase = space.type;
+
+  if (space.type === 'end') {
+    triggerFinalRound(player);
+    return;
+  }
+  if (space.type === 'start') {
+    showNarrator(`${player.avatar} ist wieder am Start! Weiter! 🏁`, 1500);
+    setTimeout(nextTurn, 1800);
+    return;
+  }
+  if (space.type === 'question' || space.type === 'bonus') {
+    const pts = (space.type === 'bonus' || gameState.bonusNextGlobal) ? 4 : 2;
+    if (gameState.bonusNextGlobal) gameState.bonusNextGlobal = false;
+    showQuestion(player, space.cat, pts);
+    return;
+  }
+  if (space.type === 'duel') {
+    showTargetPicker(player);
+    return;
+  }
+  if (space.type === 'event') {
+    triggerEvent();
+    return;
+  }
+}
+
+function triggerFinalRound(player) {
+  if (!gameState.finalRoundTriggered) {
+    gameState.finalRoundTriggered = true;
+    // How many players still get a turn after this one?
+    const n = gameState.players.length;
+    const remaining = n - 1; // others each get 1 more turn
+    gameState.finalRoundCount = remaining;
+    synthUnlock();
+    showNarrator(`🏆 ${player.name} hat das Ziel erreicht! LETZTE RUNDE! 🏆`, 3000);
+    setTimeout(() => {
+      if (remaining === 0) { endGame(); } else { nextTurn(); }
+    }, 3200);
+  } else {
+    // This player already triggered it or is in final round
+    setTimeout(nextTurn, 500);
+  }
+}
+
+/* ═════════════════════════════════════════
+   QUESTION SYSTEM
+═════════════════════════════════════════ */
+let _questionTimerTimeout = null;
+
+function getQuestion(catId) {
+  if (!DATA) return null;
+  const all  = DATA.questions.filter(q => q.category === catId);
+  const pool = all.filter(q => !gameState.seenQuestions.includes(q.id));
+  if (pool.length === 0) {
+    // Reset pool for this category
+    gameState.seenQuestions = gameState.seenQuestions.filter(id => !all.map(q=>q.id).includes(id));
+    return all[Math.floor(Math.random() * all.length)];
+  }
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function showQuestion(player, catId, pts) {
+  const q = getQuestion(catId);
+  if (!q) { setTimeout(nextTurn, 500); return; }
+  gameState.seenQuestions.push(q.id);
+
+  const w = WORLDS[catId];
+  const sheet = document.getElementById('question-sheet');
+
+  // Header
+  document.getElementById('qs-player-tag').textContent   = `${player.avatar} ${player.name || 'Spieler'}`;
+  document.getElementById('qs-player-tag').style.color   = player.color;
+  document.getElementById('qs-category-tag').textContent = `${w.emoji} ${w.label}`;
+  document.getElementById('qs-category-tag').style.color = w.accent;
+  document.getElementById('qs-pts-tag').textContent      = `+${pts} ⭐`;
+  document.getElementById('qs-source').textContent       = q.title;
+
+  // Question (typewriter)
+  typewriterText('qs-question', q.question, () => {});
+
+  // Options
+  const optsEl = document.getElementById('qs-options');
+  optsEl.innerHTML = '';
+  const letters = ['A','B','C'];
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'qs-option-btn';
+    btn.style.borderColor = w.accentGlow + '55';
+    btn.innerHTML = `<span class="qs-letter" style="background:${w.btnBg}">${letters[i]}</span><span>${opt}</span>`;
+    btn.onclick = () => resolveAnswer(i, q, player, pts, btn, optsEl);
+    optsEl.appendChild(btn);
+  });
+
+  // Timer (10s)
+  clearTimeout(_questionTimerTimeout);
+  const timerBar = document.getElementById('qs-timer-bar');
+  timerBar.style.animation = 'none';
+  void timerBar.offsetWidth;
+  timerBar.style.background = w.accentGlow;
+  timerBar.style.animation = 'timerCountdown 10s linear forwards';
+
+  _questionTimerTimeout = setTimeout(() => {
+    // Time's up — treat as wrong
+    disableOptions(optsEl);
+    showNarrator(`⏱️ Zeit abgelaufen! Kein Punkt für ${player.avatar}`, 1800);
+    flashScreen('wrong');
+    setTimeout(() => {
+      sheet.classList.remove('qs-active');
+      nextTurn();
+    }, 2000);
+  }, 10500);
+
+  sheet.classList.add('qs-active');
+}
+
+function resolveAnswer(selectedIdx, q, player, pts, clickedBtn, optsEl) {
+  clearTimeout(_questionTimerTimeout);
+  disableOptions(optsEl);
+
+  const correct = selectedIdx === q.correctIndex;
+  const btns    = optsEl.querySelectorAll('.qs-option-btn');
+
+  btns[q.correctIndex].classList.add('qs-opt-correct');
+  if (!correct) clickedBtn.classList.add('qs-opt-wrong');
+
+  if (correct) {
+    player.points += pts;
+    flashScreen('correct');
+    synthCorrect();
+    if (navigator.vibrate) navigator.vibrate(50);
+    const rect = clickedBtn.getBoundingClientRect();
+    createSparkles(rect.left + rect.width/2, rect.top + rect.height/2, WORLDS[BOARD[player.position].cat]?.accentGlow || '#ffd700');
+    animateScoreUpdate(player, pts, true);
+    if (pts === 4) showNarrator(`✨ BONUS! ${player.avatar} holt ${pts} Punkte!`, 2000);
+    else showNarrator(`${player.avatar} hat Recht! +${pts} Punkte! 🎉`, 1800);
+  } else {
+    flashScreen('wrong');
+    synthWrong();
+    showScreenCrack();
+    if (navigator.vibrate) navigator.vibrate([80,30,80]);
+    showNarrator(`${player.avatar} liegt daneben... Kein Punkt!`, 1800);
+  }
+
+  updateScoreStrip();
+
+  setTimeout(() => {
+    document.getElementById('question-sheet').classList.remove('qs-active');
+    nextTurn();
+  }, 2000);
+}
+
+function disableOptions(optsEl) {
+  optsEl.querySelectorAll('.qs-option-btn').forEach(b => b.disabled = true);
+}
+
+/* ═════════════════════════════════════════
+   TYPEWRITER
+═════════════════════════════════════════ */
+let _typerInterval = null;
+function typewriterText(elId, text, onDone) {
+  if (_typerInterval) { clearInterval(_typerInterval); _typerInterval = null; }
+  const el = document.getElementById(elId);
+  if (!el) { onDone(); return; }
+  el.textContent = '';
+  let i = 0;
+  _typerInterval = setInterval(() => {
+    if (i >= text.length) {
+      clearInterval(_typerInterval); _typerInterval = null;
+      onDone(); return;
+    }
+    el.textContent = text.slice(0, ++i);
+    if (i % 3 === 0) synthTick();
+  }, 22);
+}
+
+/* ═════════════════════════════════════════
+   DUEL SYSTEM
+═════════════════════════════════════════ */
+function showTargetPicker(challenger) {
+  const list    = document.getElementById('to-list');
+  const overlay = document.getElementById('target-overlay');
+  list.innerHTML = '';
+
+  const opponents = gameState.players.filter(p => p.id !== challenger.id);
+  opponents.forEach(target => {
+    const btn = document.createElement('button');
+    btn.className = 'to-player-btn';
+    btn.style.borderColor = target.color;
+    btn.innerHTML = `
+      <span class="to-avatar">${target.avatar}</span>
+      <span class="to-pname">${target.name || 'Spieler'}</span>
+      <span class="to-pts" style="color:${target.color}">${target.points} ⭐</span>
+    `;
+    btn.onclick = () => {
+      overlay.classList.remove('to-active');
+      startDuel(challenger, target);
+    };
+    list.appendChild(btn);
+  });
+
+  overlay.classList.add('to-active');
+}
+
+let _duelTimerTimeout = null;
+let _duelLocked = { challenger: false, defender: false };
+
+function startDuel(challenger, defender) {
+  synthDuel();
+  showNarrator(`⚔️ ${challenger.avatar} ${challenger.name} fordert ${defender.avatar} ${defender.name} heraus!`, 2200);
+
+  // Pick a random question (random category)
+  const cats = Object.keys(WORLDS);
+  const cat  = cats[Math.floor(Math.random() * cats.length)];
+  const q    = getQuestion(cat);
+  if (!q) { nextTurn(); return; }
+  gameState.seenQuestions.push(q.id);
+
+  gameState.pendingDuel = { challenger, defender, q };
+  _duelLocked = { challenger: false, defender: false };
+
+  // Populate duel screen
+  const w = WORLDS[cat];
+  document.getElementById('duel-question-text').textContent = q.question;
+
+  const letters = ['A','B','C'];
+
+  function makeDuelBtns(containerId, playerKey) {
+    const opts = document.getElementById(containerId);
+    opts.innerHTML = '';
+    q.options.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'duel-opt-btn';
+      btn.style.borderColor = gameState.pendingDuel[playerKey].color + '88';
+      btn.innerHTML = `<span class="duel-letter">${letters[i]}</span><span>${opt}</span>`;
+      btn.onclick = () => resolveDuelAnswer(i, q, playerKey, btn, opts);
+      opts.appendChild(btn);
+    });
+  }
+
+  makeDuelBtns('duel-challenger-opts', 'challenger');
+  makeDuelBtns('duel-defender-opts',   'defender');
+
+  document.getElementById('duel-challenger-label').innerHTML =
+    `${challenger.avatar} <span style="color:${challenger.color}">${challenger.name || 'Spieler'}</span> · ANGREIFER`;
+  document.getElementById('duel-defender-label').innerHTML =
+    `${defender.avatar} <span style="color:${defender.color}">${defender.name || 'Spieler'}</span> · VERTEIDIGER`;
+
+  // Timer
+  const timerBar = document.getElementById('duel-timer-bar');
+  timerBar.style.animation = 'none';
+  void timerBar.offsetWidth;
+  timerBar.style.animation = 'timerCountdown 15s linear forwards';
+
+  clearTimeout(_duelTimerTimeout);
+  _duelTimerTimeout = setTimeout(() => {
+    showNarrator('⏱️ Niemand hat rechtzeitig geantwortet! Unentschieden!', 2000);
+    setTimeout(() => { showScreen('screen-board'); nextTurn(); }, 2500);
+  }, 15500);
+
+  setTimeout(() => showScreen('screen-duel'), 2400); // brief delay after narrator
+}
+
+function resolveDuelAnswer(selectedIdx, q, playerKey, clickedBtn, opts) {
+  if (_duelLocked[playerKey]) return;
+  _duelLocked[playerKey] = true;
+  clearTimeout(_duelTimerTimeout);
+
+  const duel     = gameState.pendingDuel;
+  const correct  = selectedIdx === q.correctIndex;
+  const player   = duel[playerKey];
+  const other    = playerKey === 'challenger' ? duel.defender : duel.challenger;
+  const otherKey = playerKey === 'challenger' ? 'defender' : 'challenger';
+
+  // Lock out other side too
+  _duelLocked[otherKey] = true;
+  const otherOpts = document.getElementById(otherKey === 'challenger' ? 'duel-challenger-opts' : 'duel-defender-opts');
+  if (otherOpts) otherOpts.querySelectorAll('.duel-opt-btn').forEach(b => b.disabled = true);
+
+  // Show correct answer
+  opts.querySelectorAll('.duel-opt-btn').forEach((b, i) => {
+    b.disabled = true;
+    if (i === q.correctIndex) b.classList.add('duel-opt-correct');
+  });
+  if (!correct) clickedBtn.classList.add('duel-opt-wrong');
+
+  setTimeout(() => {
+    if (correct) {
+      // Winner steals from loser
+      const steal = Math.min(3, other.points);
+      other.points  = Math.max(0, other.points - steal);
+      player.points += steal;
+      synthSteal();
+      if (navigator.vibrate) navigator.vibrate([100,50,100]);
+      flashScreen('correct');
+      animateSteal(other, player, steal);
+      showNarrator(`⚔️ ${player.avatar} gewinnt! +${steal} GESTOHLEN von ${other.avatar}! 💸`, 2500);
+    } else {
+      // Wrong answer — other player auto-wins (they defended)
+      if (!_duelLocked[otherKey] || true) {
+        const steal = Math.min(3, player.points);
+        player.points = Math.max(0, player.points - steal);
+        other.points += steal;
+        synthSteal();
+        flashScreen('wrong');
+        showScreenCrack();
+        animateSteal(player, other, steal);
+        showNarrator(`${player.avatar} greift daneben! ${other.avatar} verteidigt! +${steal} ⭐`, 2500);
+      }
+    }
+
+    updateScoreStrip();
+    setTimeout(() => {
+      showScreen('screen-board');
+      nextTurn();
+    }, 2800);
+  }, 700);
+}
+
+/* ═════════════════════════════════════════
+   STEAL ANIMATION
+═════════════════════════════════════════ */
+function animateSteal(fromPlayer, toPlayer, amount) {
+  const fromEl = document.getElementById(`score-card-${fromPlayer.id}`);
+  const toEl   = document.getElementById(`score-card-${toPlayer.id}`);
+  if (!fromEl || !toEl) return;
+
+  const fromRect = fromEl.getBoundingClientRect();
+  const toRect   = toEl.getBoundingClientRect();
+
+  for (let i = 0; i < 5; i++) {
+    setTimeout(() => {
+      const orb = document.createElement('div');
+      orb.className = 'steal-orb';
+      orb.textContent = '⭐';
+      orb.style.cssText = `
+        left:${fromRect.left + fromRect.width/2}px;
+        top:${fromRect.top + fromRect.height/2}px;
+      `;
+      document.body.appendChild(orb);
+
+      const dx = toRect.left + toRect.width/2  - (fromRect.left + fromRect.width/2);
+      const dy = toRect.top  + toRect.height/2 - (fromRect.top  + fromRect.height/2);
+      orb.style.setProperty('--steal-dx', dx + 'px');
+      orb.style.setProperty('--steal-dy', dy + 'px');
+
+      requestAnimationFrame(() => orb.classList.add('steal-orb--fly'));
+      setTimeout(() => orb.remove(), 900);
+    }, i * 100);
+  }
+
+  // Flash labels
+  const fromPts = document.getElementById(`sc-pts-${fromPlayer.id}`);
+  if (fromPts) { fromPts.classList.add('pts-lose'); setTimeout(() => fromPts.classList.remove('pts-lose'), 600); }
+  const toPts = document.getElementById(`sc-pts-${toPlayer.id}`);
+  if (toPts)   { toPts.classList.add('pts-gain');   setTimeout(() => toPts.classList.remove('pts-gain'), 600); }
+}
+
+function animateScoreUpdate(player, amount, isGain) {
+  const card = document.getElementById(`score-card-${player.id}`);
+  if (!card) return;
+  const pts = document.getElementById(`sc-pts-${player.id}`);
+  if (pts) {
+    pts.classList.add(isGain ? 'pts-gain' : 'pts-lose');
+    setTimeout(() => pts.classList.remove('pts-gain','pts-lose'), 600);
+  }
+  // Float number
+  const rect = card.getBoundingClientRect();
+  const float = document.createElement('div');
+  float.className = 'score-float';
+  float.textContent = isGain ? `+${amount} ⭐` : `-${amount} ⭐`;
+  float.style.cssText = `left:${rect.left+rect.width/2}px;top:${rect.top}px;color:${isGain?'#ffd700':'#ef5350'};`;
+  document.body.appendChild(float);
+  setTimeout(() => float.remove(), 1200);
+}
+
+/* ═════════════════════════════════════════
+   ARD EVENT SYSTEM
+═════════════════════════════════════════ */
+function triggerEvent() {
+  if (gameState.eventDeck.length === 0) {
+    gameState.eventDeck = [...ARD_EVENTS].sort(() => Math.random() - 0.5);
+  }
+  const ev = gameState.eventDeck.pop();
+  synthEvent();
+
+  document.getElementById('eo-emoji').textContent = ev.emoji;
+  document.getElementById('eo-title').textContent = ev.title;
+  document.getElementById('eo-desc').textContent  = ev.desc;
+
+  const overlay = document.getElementById('event-overlay');
+  overlay.classList.add('eo-active');
+
+  setTimeout(() => {
+    overlay.classList.remove('eo-active');
+    applyEventEffect(ev);
+  }, 3000);
+}
+
+function applyEventEffect(ev) {
+  const players = gameState.players;
+  const sorted  = [...players].sort((a,b) => b.points - a.points);
+  const leader  = sorted[0];
+  const last    = sorted[sorted.length - 1];
+
+  switch(ev.effect) {
+    case 'bonus_next_global':
+      gameState.bonusNextGlobal = true;
+      showNarrator('📢 Nächste Frage zählt 4 Punkte für ALLE!', 2000);
+      break;
+    case 'all_advance_2':
+      players.forEach(p => { p.position = Math.min(p.position + 2, BOARD.length - 1); });
+      renderTokens();
+      showNarrator('🏆 Alle rücken 2 Felder vor!', 2000);
+      break;
+    case 'last_steals_leader':
+      if (last.id !== leader.id) {
+        const steal = Math.min(3, leader.points);
+        leader.points = Math.max(0, leader.points - steal);
+        last.points  += steal;
+        animateSteal(leader, last, steal);
+        showNarrator(`🎭 ${last.avatar} stiehlt ${steal} Punkte von ${leader.avatar}! 😈`, 2500);
+      }
+      break;
+    case 'all_gain_2':
+      players.forEach(p => { p.points += 2; animateScoreUpdate(p, 2, true); });
+      showNarrator('⭐ Alle bekommen +2 Punkte! 🎉', 2000);
+      break;
+    case 'skip_next':
+      gameState.skipNextPlayer = true;
+      showNarrator('📺 Nächster Spieler setzt eine Runde aus!', 2000);
+      break;
+    case 'leader_loses_3':
+      if (leader.points >= 3) {
+        leader.points -= 3;
+        animateScoreUpdate(leader, 3, false);
+        showNarrator(`🃏 Schwarzer Peter! ${leader.avatar} ${leader.name} verliert 3 Punkte!`, 2500);
+      }
+      break;
+    case 'shuffle_positions':
+      const positions = players.map(p => p.position).sort(() => Math.random()-0.5);
+      players.forEach((p, i) => { p.position = positions[i]; });
+      renderTokens();
+      showNarrator('🔀 Alle Positionen wurden gemischt! Chaos!', 2500);
+      break;
+  }
+
+  updateScoreStrip();
+  setTimeout(nextTurn, 2800);
+}
+
+/* ═════════════════════════════════════════
+   END GAME & WINNER SCREEN
+═════════════════════════════════════════ */
+function endGame() {
+  showScreen('screen-winner');
+  synthWin();
+  showNarrator('🏆 Das Spiel ist vorbei! Herzlichen Glückwunsch!', 3000);
+
+  const sorted   = [...gameState.players].sort((a,b) => b.points - a.points);
+  const podium   = document.getElementById('winner-podium');
+  podium.innerHTML = '';
+  const medals   = ['🥇','🥈','🥉','🎖️'];
+
+  sorted.forEach((p, rank) => {
+    const row = document.createElement('div');
+    row.className = `winner-row${rank === 0 ? ' winner-row--first' : ''}`;
+    row.style.borderColor = p.color;
+    if (rank === 0) row.style.boxShadow = `0 0 24px ${p.color}55`;
+    row.innerHTML = `
+      <span class="winner-medal">${medals[rank] || '🎖️'}</span>
+      <span class="winner-avatar">${p.avatar}</span>
+      <span class="winner-name">${p.name || `Spieler ${rank+1}`}</span>
+      <span class="winner-score" style="color:${p.color}">${p.points} ⭐</span>
+    `;
+    podium.appendChild(row);
+  });
+
+  // Confetti
+  setTimeout(() => spawnConfetti(document.getElementById('winner-particles')), 400);
+}
+
+/* ═════════════════════════════════════════
+   PUBLIC GAME OBJECT
+═════════════════════════════════════════ */
+const Game = {
+  goStart() {
+    showScreen('screen-start');
   },
 
-  resetGame() {
-    if (confirm('Wirklich zurücksetzen? Alle Punkte und Fortschritte werden gelöscht.')) {
-      state          = defaultState(DATA.categories);
-      currentRun     = null;
-      currentMapNode = 'grundwissen';
-      clearAmbient();
-      saveState();
-      App.goMap();
+  goSetup() {
+    getAudioCtx(); // unlock audio context
+    setupPlayerCount = 2;
+    setupPlayers = [
+      { name:'', avatar:'🦊', color: PLAYER_COLORS[0] },
+      { name:'', avatar:'🐺', color: PLAYER_COLORS[1] },
+      { name:'', avatar:'🦁', color: PLAYER_COLORS[2] },
+      { name:'', avatar:'🐻', color: PLAYER_COLORS[3] },
+    ];
+    renderSetup();
+    showScreen('screen-setup');
+  },
+
+  startGame() {
+    // Build player list
+    gameState.players = [];
+    for (let i = 0; i < setupPlayerCount; i++) {
+      const sp = setupPlayers[i];
+      gameState.players.push({
+        id:       `p${i+1}`,
+        name:     sp.name || `Spieler ${i+1}`,
+        avatar:   sp.avatar,
+        color:    sp.color,
+        position: 0,
+        points:   0,
+      });
     }
+    gameState.currentPlayerIdx   = 0;
+    gameState.phase              = 'roll';
+    gameState.seenQuestions      = [];
+    gameState.eventDeck          = [...ARD_EVENTS].sort(() => Math.random()-0.5);
+    gameState.finalRoundTriggered = false;
+    gameState.finalRoundCount    = 0;
+    gameState.skipNextPlayer     = false;
+    gameState.bonusNextGlobal    = false;
+    gameState.pendingDuel        = null;
+
+    showScreen('screen-board');
+    renderBoard();
+    renderScoreStrip();
+    updateTurnControls();
+
+    setTimeout(() => {
+      showNarrator('🎲 Das Spiel beginnt! Viel Erfolg!', 2000);
+    }, 400);
+  },
+
+  roll() {
+    if (gameState.phase !== 'roll') return;
+    gameState.phase = 'moving';
+    const btn = document.getElementById('roll-btn');
+    btn.disabled = true;
+
+    const roll = Math.ceil(Math.random() * 6);
+    const cp   = currentPlayer();
+
+    animateDice(roll, () => {
+      setTimeout(() => {
+        animateMove(cp, roll, () => {
+          resolveSpace(cp);
+        });
+      }, 400);
+    });
+  },
+
+  rematch() {
+    // Same players, reset everything
+    gameState.players.forEach(p => { p.position = 0; p.points = 0; });
+    gameState.currentPlayerIdx   = 0;
+    gameState.phase              = 'roll';
+    gameState.seenQuestions      = [];
+    gameState.eventDeck          = [...ARD_EVENTS].sort(() => Math.random()-0.5);
+    gameState.finalRoundTriggered = false;
+    gameState.finalRoundCount    = 0;
+    gameState.skipNextPlayer     = false;
+    gameState.bonusNextGlobal    = false;
+    gameState.pendingDuel        = null;
+
+    showScreen('screen-board');
+    renderBoard();
+    renderScoreStrip();
+    updateTurnControls();
+
+    setTimeout(() => showNarrator('🔄 Nochmal! Zeigt, was ihr drauf habt!', 2000), 400);
   },
 };
 
 /* ═════════════════════════════════════════
-   Boot
+   BOOT
 ═════════════════════════════════════════ */
 async function init() {
   try {
     const res = await fetch('data.json');
-    DATA  = await res.json();
-    state = loadState(DATA.categories);
-    createParticles();
+    DATA = await res.json();
+    createParticles('particles');
     showScreen('screen-start');
-
-    window.addEventListener('resize', () => {
-      if (document.getElementById('screen-map').classList.contains('active')) {
-        renderPaths(); positionPlayer(false);
-      }
-    });
-  } catch (err) {
+  } catch(err) {
     document.body.innerHTML = `
       <div style="padding:40px;color:#aac8ff;font-family:sans-serif;line-height:1.7;background:#0d0d14;height:100vh">
         <strong style="color:#0064ff;font-size:20px">ARD Life</strong><br><br>
         Ladefehler: ${err.message}<br><br>
         Öffne die App über einen lokalen Server:<br>
-        <code style="background:#16162a;padding:6px 10px;border-radius:6px;display:inline-block;margin-top:6px">
-          npx serve .
-        </code>
+        <code style="background:#16162a;padding:6px 10px;border-radius:6px;display:inline-block;margin-top:6px">npx serve .</code>
       </div>`;
   }
 }

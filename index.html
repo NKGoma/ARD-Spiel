@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>ARD Life – Medien als Lebensspiel</title>
+  <title>ARD Life – Das Wissensduell</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -14,181 +14,118 @@
     <div class="start-content">
       <div class="ard-logo-badge">ARD</div>
       <h1 class="start-title">ARD Life</h1>
-      <p class="start-tagline">Sechs Welten. Unendliches Wissen.</p>
-      <p class="start-sub">Lerne · Entdecke · Wachse</p>
-      <button class="btn-explore" onclick="App.goMap()">Erkunde die Karte ›</button>
+      <p class="start-tagline">Das Wissensduell</p>
+      <p class="start-sub">2–4 Spieler · Stehle Punkte · Werde Champion</p>
+      <button class="btn-explore" onclick="Game.goSetup()">Neues Spiel ›</button>
     </div>
   </section>
 
-  <!-- ══ S2: RPG World Map ══ -->
-  <section id="screen-map" class="screen">
-    <div class="map-topbar">
-      <div class="ard-logo-badge ard-logo-badge--sm">ARD</div>
-      <div class="map-topbar-center">ARD Life</div>
-      <div class="map-topbar-right">
-        <div class="pts-badge">⭐ <span id="map-points">0</span></div>
-        <button class="mute-btn" onclick="toggleMute()" title="Sound an/aus">🔊</button>
-        <button class="wheel-pill" onclick="App.goWheel()">◎</button>
-      </div>
-    </div>
-
-    <div class="map-world" id="map-world">
-      <div id="map-stars" class="map-stars"></div>
-      <div id="map-glows" class="map-glows"></div>
-      <svg id="map-paths" class="map-paths" xmlns="http://www.w3.org/2000/svg"></svg>
-      <div id="map-nodes" class="map-nodes"></div>
-      <div id="player" class="player">
-        <div class="player-sprite">🧙</div>
-        <div class="player-shadow"></div>
-      </div>
-    </div>
-
-    <div id="mission-hud" class="mission-hud">
-      <div class="mission-top">
-        <span class="mission-kicker">MISSION BRIEF</span>
-        <span class="mission-combo" id="mission-combo"></span>
-      </div>
-      <h3 class="mission-title" id="mission-title">Wähle eine Welt</h3>
-      <p  class="mission-text"  id="mission-text"></p>
-      <div class="mission-meta">
-        <span id="mission-objective"></span>
-        <span id="mission-bonus"></span>
-      </div>
-      <button class="btn-enter-world" id="btn-enter-world"
-              onclick="App.enterCurrentWorld()">Betreten →</button>
-    </div>
-  </section>
-
-  <!-- ══ S3: Battle / Quiz ══ -->
-  <section id="screen-quiz" class="screen">
-
-    <!-- Topbar -->
-    <header class="battle-topbar">
-      <button class="back-btn" onclick="App.abandonRun()">←</button>
-      <div class="battle-world-info">
+  <!-- ══ S2: Player Setup ══ -->
+  <section id="screen-setup" class="screen">
+    <header class="setup-header">
+      <button class="back-btn" onclick="Game.goStart()">←</button>
+      <div class="setup-header-title">
         <div class="ard-logo-badge ard-logo-badge--xs">ARD</div>
-        <span id="battle-world-name" class="battle-world-name"></span>
+        <span>Spieler einrichten</span>
       </div>
-      <div class="pts-badge">⭐ <span id="quiz-points">0</span></div>
+      <div style="width:36px"></div>
     </header>
-    <!-- Boss timer bar (shown only for question 5) -->
-    <div class="boss-timer-wrap" id="boss-timer-wrap" style="display:none">
-      <div class="boss-timer-bar" id="boss-timer-bar"></div>
-      <span class="boss-timer-label">⚔️ BOSS</span>
+    <div class="setup-body" id="setup-body">
+      <!-- rendered by JS -->
     </div>
-
-    <!-- HP Track + Level progress pips -->
-    <div class="level-track-row">
-      <span class="level-track-label" id="level-track-label">LEVEL 1 / 5</span>
-      <div class="level-pips" id="level-pips" style="display:flex;gap:5px;align-items:center;">
-        <div class="pip"></div><div class="pip"></div><div class="pip"></div>
-        <div class="pip"></div><div class="pip"></div>
-      </div>
+    <div class="setup-footer">
+      <button class="btn-start-game" id="btn-start-game" onclick="Game.startGame()">Los geht's! 🎲</button>
     </div>
-    <!-- HP bar strip -->
-    <div class="hp-track"><div class="hp-bar-fill" id="hp-bar-fill"></div></div>
-
-    <!-- ARD Content card (the "opponent") -->
-    <div class="content-card" id="content-card">
-      <div class="content-card-inner">
-        <div class="content-ard-badge">ARD</div>
-        <div class="content-info">
-          <p class="content-title" id="quiz-source"></p>
-          <a class="content-link" id="content-link"
-             href="https://www.ardmediathek.de" target="_blank" rel="noopener">
-            ardmediathek.de →
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Question -->
-    <div class="question-wrap">
-      <h2 id="quiz-question" class="quiz-question"></h2>
-    </div>
-
-    <!-- Options -->
-    <div id="quiz-options" class="quiz-options"></div>
-
   </section>
 
-  <!-- ══ S4: Feedback ══ -->
-  <section id="screen-feedback" class="screen">
-    <div class="feedback-inner">
-      <div id="fb-icon" class="fb-icon"></div>
-      <h2  id="fb-result"        class="fb-result"></h2>
-      <p   id="fb-correct-label" class="fb-correct-label"></p>
-      <div class="insight-card">
-        <div class="insight-bar" id="insight-bar"></div>
-        <p id="fb-insight"></p>
+  <!-- ══ S3: Game Board ══ -->
+  <section id="screen-board" class="screen">
+    <div class="score-strip" id="score-strip"></div>
+    <div class="board-wrapper" id="board-wrapper">
+      <div class="board-grid" id="board-grid"></div>
+      <div class="token-layer" id="token-layer"></div>
+    </div>
+    <div class="turn-controls" id="turn-controls">
+      <div class="current-player-info" id="current-player-info">
+        <span class="cp-avatar" id="cp-avatar"></span>
+        <span class="cp-name"   id="cp-name"></span>
+        <span class="cp-label">ist dran</span>
       </div>
-      <a id="fb-link" class="ard-pill"
-         href="https://www.ardmediathek.de" target="_blank" rel="noopener">
-        ARD Inhalt ansehen →
-      </a>
-      <button class="btn-weiter" id="btn-weiter" onclick="App.weiterAction()">
-        Weiter →
+      <button class="roll-btn" id="roll-btn" onclick="Game.roll()">
+        <span class="roll-dice-face" id="roll-dice-face">🎲</span>
+        <span class="roll-label">WÜRFELN!</span>
       </button>
     </div>
-    <div class="point-float" id="point-float">+1 ⭐</div>
   </section>
 
-  <!-- ══ S5: World Complete ══ -->
-  <section id="screen-complete" class="screen">
-    <div class="complete-bg" id="complete-bg"></div>
-    <div class="complete-inner">
-      <div class="complete-trophy" id="complete-trophy">🏆</div>
-      <h2 class="complete-title" id="complete-title">Welt gemeistert!</h2>
-      <div class="complete-stars" id="complete-stars"></div>
-      <p  class="complete-fraction" id="complete-fraction">5 / 5 Richtig</p>
-      <div class="complete-unlocks" id="complete-unlocks"></div>
-      <button class="btn-back-map" onclick="App.goMap()">→ Zur Karte</button>
+  <!-- ══ Question Bottom Sheet (slides over board) ══ -->
+  <div id="question-sheet" class="question-sheet">
+    <div class="qs-handle"></div>
+    <div class="qs-header">
+      <div class="qs-player-tag" id="qs-player-tag"></div>
+      <div class="qs-category-tag" id="qs-category-tag"></div>
+      <div class="qs-pts-tag" id="qs-pts-tag">+2 ⭐</div>
+    </div>
+    <div class="qs-timer-wrap"><div class="qs-timer-bar" id="qs-timer-bar"></div></div>
+    <div class="qs-source" id="qs-source"></div>
+    <h2 class="qs-question" id="qs-question"></h2>
+    <div class="qs-options" id="qs-options"></div>
+  </div>
+
+  <!-- ══ Duel Target Picker (overlay) ══ -->
+  <div id="target-overlay" class="target-overlay">
+    <div class="to-inner">
+      <div class="to-title">⚔️ Wen willst du herausfordern?</div>
+      <div class="to-sub">Wähle einen Gegner!</div>
+      <div class="to-list" id="to-list"></div>
+    </div>
+  </div>
+
+  <!-- ══ S4: Duel Screen ══ -->
+  <section id="screen-duel" class="screen">
+    <div class="duel-top" id="duel-top">
+      <div class="duel-player-label" id="duel-challenger-label"></div>
+      <div class="duel-opts" id="duel-challenger-opts"></div>
+    </div>
+    <div class="duel-center-band">
+      <span class="duel-vs-icon">⚔️</span>
+      <div class="duel-question-text" id="duel-question-text"></div>
+      <div class="duel-timer-wrap"><div class="duel-timer-bar" id="duel-timer-bar"></div></div>
+      <span class="duel-vs-icon">⚔️</span>
+    </div>
+    <div class="duel-bottom" id="duel-bottom">
+      <div class="duel-opts duel-opts--flipped" id="duel-defender-opts"></div>
+      <div class="duel-player-label duel-player-label--flipped" id="duel-defender-label"></div>
     </div>
   </section>
 
-  <!-- ══ S6: Wheel of Life ══ -->
-  <section id="screen-wheel" class="screen">
-    <header class="wheel-header">
-      <button class="back-btn back-btn--light" onclick="App.goMap()">←</button>
-      <div class="wheel-header-title">
-        <div class="ard-logo-badge ard-logo-badge--xs">ARD</div>
-        <span>Wheel of Life</span>
+  <!-- ══ ARD Event Overlay ══ -->
+  <div id="event-overlay" class="event-overlay">
+    <div class="eo-card" id="eo-card">
+      <div class="eo-kicker">📺 ARD MOMENT</div>
+      <div class="eo-emoji" id="eo-emoji"></div>
+      <div class="eo-title" id="eo-title"></div>
+      <div class="eo-desc"  id="eo-desc"></div>
+    </div>
+  </div>
+
+  <!-- ══ S5: Winner Screen ══ -->
+  <section id="screen-winner" class="screen">
+    <div id="winner-particles" class="particles"></div>
+    <div class="winner-inner">
+      <div class="winner-headline">🏆 Spielende!</div>
+      <div class="winner-podium" id="winner-podium"></div>
+      <div class="winner-btns">
+        <button class="btn-rematch" onclick="Game.rematch()">Nochmal! 🔄</button>
+        <button class="btn-new-game" onclick="Game.goSetup()">Neue Spieler</button>
       </div>
-      <div class="pts-badge pts-badge--gold">⭐ <span id="wheel-points">0</span></div>
-    </header>
-    <div class="wheel-wrap">
-      <svg id="wheel-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
-    <div id="wheel-legend" class="wheel-legend"></div>
-    <button class="reset-btn" onclick="App.resetGame()">Spiel zurücksetzen</button>
   </section>
 
-  <!-- ══ Narrator Voice Box ══ -->
-  <div id="narrator" class="narrator-box">
-    <span id="narrator-text"></span>
-  </div>
-
-  <!-- ══ Boss Warning Overlay ══ -->
-  <div id="boss-warning" class="boss-warning">
-    <div class="boss-warning-icon">⚔️</div>
-    <div class="boss-warning-text">BOSS-FRAGE!</div>
-    <div class="boss-warning-sub">Die letzte Herausforderung</div>
-  </div>
-
-  <!-- ══ Screen Crack ══ -->
-  <div id="screen-crack" class="screen-crack"></div>
-
-  <!-- ══ Battle Intro Overlay ══ -->
-  <div id="battle-intro" class="battle-intro">
-    <div class="bi-flash"></div>
-    <div class="bi-content">
-      <div class="bi-eyebrow">— Betreten —</div>
-      <div class="bi-world-name" id="bi-world-name"></div>
-    </div>
-  </div>
-
-  <!-- ══ Screen Flash ══ -->
+  <!-- ══ Global overlays (reused from previous version) ══ -->
+  <div id="narrator" class="narrator-box"><span id="narrator-text"></span></div>
   <div id="screen-flash" class="screen-flash"></div>
+  <div id="screen-crack" class="screen-crack"></div>
 
   <script src="app.js"></script>
 </body>
