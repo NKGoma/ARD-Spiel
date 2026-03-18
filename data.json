@@ -52,6 +52,7 @@
       "question": "Wie oft wird die Tagesschau täglich ausgestrahlt?",
       "options": ["Einmal täglich", "Mehrmals täglich", "Nur am Wochenende"],
       "correctIndex": 1,
+      "points": { "bildung": 2, "gemeinschaft": 0, "glueck": 0 },
       "insight": "Regelmäßige Information ist der Schlüssel zum Verständnis der Welt. Wer täglich kleine Einheiten lernt, bleibt langfristig informiert."
     },
     {
@@ -62,6 +63,7 @@
       "question": "Seit welchem Jahr gibt es 'Die Sendung mit der Maus'?",
       "options": ["Seit 1971", "Seit 1985", "Seit 1995"],
       "correctIndex": 0,
+      "points": { "bildung": 2, "gemeinschaft": 0, "glueck": 0 },
       "insight": "Neugier und das Stellen einfacher Fragen sind die Grundlage allen Lernens – egal in welchem Alter."
     },
     {
@@ -76,6 +78,7 @@
         "Audiovisuelles Radio Deutschland"
       ],
       "correctIndex": 1,
+      "points": { "bildung": 2, "gemeinschaft": 0, "glueck": 0 },
       "insight": "Zusammenarbeit schafft mehr als Einzelleistung. Die ARD ist selbst ein Beweis dafür."
     },
     {
@@ -86,6 +89,7 @@
       "question": "Seit wann läuft der Tatort im deutschen Fernsehen?",
       "options": ["Seit 1970", "Seit 1980", "Seit 1990"],
       "correctIndex": 0,
+      "points": { "bildung": 2, "gemeinschaft": 0, "glueck": 0 },
       "insight": "Kontinuität und Verlässlichkeit schaffen Vertrauen – im Fernsehen wie im Leben."
     },
     {
@@ -96,6 +100,7 @@
       "question": "Wie heißt das Hauptprogramm der ARD?",
       "options": ["Das Erste", "ZDF", "ARD eins"],
       "correctIndex": 0,
+      "points": { "bildung": 2, "gemeinschaft": 0, "glueck": 0 },
       "insight": "Öffentlich-rechtliche Medien sichern freie Information für alle – unabhängig von Einkommen oder Herkunft."
     },
     {
@@ -110,6 +115,7 @@
         "Nur Musik streamen"
       ],
       "correctIndex": 1,
+      "points": { "bildung": 2, "gemeinschaft": 0, "glueck": 0 },
       "insight": "Wissen und Unterhaltung sollten für jeden zugänglich sein – egal wann und wo."
     },
     {
@@ -120,6 +126,7 @@
       "question": "An welchem Wochentag zeigt die Sportschau traditionell die Bundesliga-Zusammenfassungen?",
       "options": ["Freitag", "Samstag", "Sonntag"],
       "correctIndex": 1,
+      "points": { "bildung": 0, "gemeinschaft": 0, "glueck": 2 },
       "insight": "Rituale und feste Routinen geben dem Leben Struktur und etwas, worauf man sich freuen kann."
     },
     {
@@ -130,6 +137,7 @@
       "question": "Über wie viele Wochen erstreckt sich die Tour de France?",
       "options": ["1 Woche", "2 Wochen", "3 Wochen"],
       "correctIndex": 2,
+      "points": { "bildung": 0, "gemeinschaft": 0, "glueck": 2 },
       "insight": "Große Ziele erfordern Ausdauer über lange Zeiträume. Nicht die Geschwindigkeit entscheidet, sondern die Beständigkeit."
     },
     {
@@ -140,6 +148,7 @@
       "question": "Wie oft finden die Olympischen Sommerspiele statt?",
       "options": ["Jedes Jahr", "Alle 2 Jahre", "Alle 4 Jahre"],
       "correctIndex": 2,
+      "points": { "bildung": 0, "gemeinschaft": 0, "glueck": 2 },
       "insight": "Geduld und langfristige Vorbereitung führen zu Höchstleistungen. Die Besten der Welt trainieren Jahre für wenige Sekunden."
     },
     {
@@ -150,6 +159,7 @@
       "question": "Welche Laufdisziplin wird auch 'Königin des Sports' genannt?",
       "options": ["100-Meter-Sprint", "1500 Meter", "Marathon"],
       "correctIndex": 2,
+      "points": { "bildung": 0, "gemeinschaft": 0, "glueck": 2 },
       "insight": "Schritt für Schritt führt auch die längste Reise zum Ziel. Gib nie auf, auch wenn es schwer wird."
     },
     {
@@ -160,6 +170,7 @@
       "question": "Welche Skidisziplin ist die schnellste im alpinen Bereich?",
       "options": ["Slalom", "Riesenslalom", "Abfahrt"],
       "correctIndex": 2,
+      "points": { "bildung": 0, "gemeinschaft": 0, "glueck": 2 },
       "insight": "Manchmal muss man mutig sein und sich voll einlassen. Wer nie Risiko eingeht, erreicht selten Großes."
     },
     {
@@ -170,6 +181,7 @@
       "question": "In welchem Jahr wurde Deutschland zuletzt Fußball-Weltmeister?",
       "options": ["2006", "2010", "2014"],
       "correctIndex": 2,
+      "points": { "bildung": 0, "gemeinschaft": 0, "glueck": 2 },
       "insight": "Teamarbeit und Zusammenhalt führen zu gemeinsamen Erfolgen, die kein Einzelner alleine erreichen könnte."
     },
     {
@@ -180,6 +192,7 @@
       "question": "Wie lautet der vollständige Name des Musikwettbewerbs, den die ARD jährlich überträgt?",
       "options": ["Eurovision Song Contest", "World Music Awards", "European Music Prize"],
       "correctIndex": 0,
+      "points": { "bildung": 0, "gemeinschaft": 1, "glueck": 1 },
       "insight": "Musik verbindet Menschen über Grenzen, Sprachen und Kulturen hinweg wie kaum etwas anderes."
     },
     {
@@ -190,6 +203,7 @@
       "question": "Aus wie vielen Musikern besteht ein klassisches Symphonieorchester in der Regel?",
       "options": ["Etwa 20", "Etwa 80", "Etwa 200"],
       "correctIndex": 1,
+      "points": { "bildung": 0, "gemeinschaft": 1, "glueck": 1 },
       "insight": "Harmonie entsteht, wenn viele unterschiedliche Stimmen eine gemeinsame Richtung finden."
     },
     {
@@ -200,6 +214,7 @@
       "question": "In welcher deutschen Stadt wurde Ludwig van Beethoven geboren?",
       "options": ["Berlin", "Bonn", "München"],
       "correctIndex": 1,
+      "points": { "bildung": 0, "gemeinschaft": 1, "glueck": 1 },
       "insight": "Selbst unter schwierigen Umständen – Beethoven erblindete fast und wurde taub – kann man Außergewöhnliches schaffen."
     },
     {
@@ -210,6 +225,7 @@
       "question": "Welche Musikrichtung entstand in den USA und beeinflusste die gesamte moderne Musik massgeblich?",
       "options": ["Klassik", "Jazz", "Folk"],
       "correctIndex": 1,
+      "points": { "bildung": 0, "gemeinschaft": 1, "glueck": 1 },
       "insight": "Innovation kommt oft aus unerwarteten Orten. Bleib offen für Neues – auch wenn es nicht aus der gewohnten Welt kommt."
     },
     {
@@ -220,6 +236,7 @@
       "question": "In welchem Jahrzehnt wurde die Rockmusik populär?",
       "options": ["1940er", "1950er", "1970er"],
       "correctIndex": 1,
+      "points": { "bildung": 0, "gemeinschaft": 1, "glueck": 1 },
       "insight": "Neue Ausdrucksformen entstehen, wenn Menschen ihre Energie kanalisieren. Finde deine eigene Stimme."
     },
     {
@@ -230,6 +247,7 @@
       "question": "Aus welchem Land stammt die Musikrichtung Reggae?",
       "options": ["Brasilien", "Jamaika", "Nigeria"],
       "correctIndex": 1,
+      "points": { "bildung": 0, "gemeinschaft": 1, "glueck": 1 },
       "insight": "Lokale Kulturen können globale Wirkung entfalten. Bleib deinen Wurzeln treu – das ist deine Stärke."
     },
     {
@@ -240,6 +258,7 @@
       "question": "Zu welchem Genre gehört die Serie 'Pastewka'?",
       "options": ["Krimi", "Sitcom", "Dokumentation"],
       "correctIndex": 1,
+      "points": { "bildung": 0, "gemeinschaft": 1, "glueck": 1 },
       "insight": "Über sich selbst lachen zu können macht das Leben leichter und andere Menschen sympathisch."
     },
     {
@@ -250,6 +269,7 @@
       "question": "Was ist die Sendung 'Extra 3' des NDR?",
       "options": ["Ein Nachrichtenmagazin", "Ein politisches Satiremagazin", "Ein Reisemagazin"],
       "correctIndex": 1,
+      "points": { "bildung": 0, "gemeinschaft": 1, "glueck": 1 },
       "insight": "Humor und Satire sind wichtige Werkzeuge, um Macht kritisch zu hinterfragen. Wer lacht, denkt nach."
     },
     {
@@ -260,6 +280,7 @@
       "question": "Wie lautet der bürgerliche Name des deutschen Humoristen 'Loriot'?",
       "options": ["Otto Waalkes", "Vicco von Bülow", "Harald Schmidt"],
       "correctIndex": 1,
+      "points": { "bildung": 0, "gemeinschaft": 1, "glueck": 1 },
       "insight": "Authentizität und Selbstironie sind die Basis echter Verbindungen – im Humor wie im Leben."
     },
     {
@@ -274,6 +295,7 @@
         "Kabarett ist reiner Körperhumor"
       ],
       "correctIndex": 1,
+      "points": { "bildung": 0, "gemeinschaft": 1, "glueck": 1 },
       "insight": "Bedeutungsvoller Humor kann Gesellschaft verändern. Lachen und Nachdenken schließen sich nicht aus."
     },
     {
@@ -288,6 +310,7 @@
         "Ausschließlich Slapstick"
       ],
       "correctIndex": 1,
+      "points": { "bildung": 0, "gemeinschaft": 1, "glueck": 1 },
       "insight": "Die besten Witze entstehen aus Wahrheit. Wer ehrlich beobachtet, findet überall Humor."
     },
     {
@@ -302,6 +325,7 @@
         "Es wird immer ohne Mikrofon gespielt"
       ],
       "correctIndex": 1,
+      "points": { "bildung": 0, "gemeinschaft": 1, "glueck": 1 },
       "insight": "Mut, alleine aufzutreten und die eigene Perspektive zu teilen, schafft echte Verbindungen mit anderen Menschen."
     },
     {
@@ -312,6 +336,7 @@
       "question": "Wann fiel die Berliner Mauer?",
       "options": ["9. November 1985", "9. November 1989", "3. Oktober 1990"],
       "correctIndex": 1,
+      "points": { "bildung": 2, "gemeinschaft": 0, "glueck": 0 },
       "insight": "Unvermutete Wendepunkte können die Geschichte verändern. Bleib offen für Wandel – auch wenn er plötzlich kommt."
     },
     {
@@ -322,6 +347,7 @@
       "question": "Wann wurde Deutschland offiziell wiedervereinigt?",
       "options": ["9. November 1989", "3. Oktober 1990", "1. Januar 1991"],
       "correctIndex": 1,
+      "points": { "bildung": 2, "gemeinschaft": 0, "glueck": 0 },
       "insight": "Was geteilt scheint, kann wieder zusammenwachsen. Geduld, Dialog und Wille machen das Unmögliche möglich."
     },
     {
@@ -332,6 +358,7 @@
       "question": "Wann endete der Zweite Weltkrieg in Europa?",
       "options": ["1943", "1945", "1947"],
       "correctIndex": 1,
+      "points": { "bildung": 2, "gemeinschaft": 0, "glueck": 0 },
       "insight": "Aus der Vergangenheit lernen wir, wie wir die Zukunft besser gestalten. Geschichte verstehen ist Verantwortung."
     },
     {
@@ -342,6 +369,7 @@
       "question": "In welchem Jahr wurde die Weimarer Republik ausgerufen?",
       "options": ["1918", "1920", "1925"],
       "correctIndex": 0,
+      "points": { "bildung": 2, "gemeinschaft": 0, "glueck": 0 },
       "insight": "Demokratie muss aktiv gelebt und verteidigt werden. Sie ist kein Selbstläufer, sondern eine tägliche Aufgabe."
     },
     {
@@ -352,6 +380,7 @@
       "question": "Zwischen welchen Supermächten spielte sich der Kalte Krieg hauptsächlich ab?",
       "options": ["USA und China", "USA und Sowjetunion", "Deutschland und England"],
       "correctIndex": 1,
+      "points": { "bildung": 2, "gemeinschaft": 0, "glueck": 0 },
       "insight": "Ideologische Unterschiede können überwunden werden, wenn Dialog Vorrang vor Konfrontation hat."
     },
     {
@@ -362,6 +391,7 @@
       "question": "In welchem Jahr landeten Menschen zum ersten Mal auf dem Mond?",
       "options": ["1965", "1969", "1972"],
       "correctIndex": 1,
+      "points": { "bildung": 2, "gemeinschaft": 0, "glueck": 0 },
       "insight": "Die größten Träume werden Wirklichkeit durch konsequentes Handeln und den Willen, Grenzen zu überwinden."
     },
     {
@@ -372,6 +402,7 @@
       "question": "Wer gewann als erster Deutscher den Oscar für den besten internationalen Film (für 'Die Blechtrommel')?",
       "options": ["Werner Herzog", "Volker Schlöndorff", "Wim Wenders"],
       "correctIndex": 1,
+      "points": { "bildung": 1, "gemeinschaft": 1, "glueck": 0 },
       "insight": "Kunst spiegelt die Gesellschaft und regt zum Nachdenken an. Guter Film verändert die Perspektive."
     },
     {
@@ -382,6 +413,7 @@
       "question": "In welcher deutschen Stadt findet das weltberühmte Wagner-Festival statt?",
       "options": ["München", "Bayreuth", "Dresden"],
       "correctIndex": 1,
+      "points": { "bildung": 1, "gemeinschaft": 1, "glueck": 0 },
       "insight": "Leidenschaft und Hingabe an eine Sache schaffen unvergessliche Erlebnisse für andere Menschen."
     },
     {
@@ -392,6 +424,7 @@
       "question": "Welcher deutsche Autor schrieb 'Die Buddenbrooks' und erhielt dafür den Nobelpreis?",
       "options": ["Hermann Hesse", "Thomas Mann", "Günter Grass"],
       "correctIndex": 1,
+      "points": { "bildung": 1, "gemeinschaft": 1, "glueck": 0 },
       "insight": "Gute Geschichten lassen uns andere Lebenswege verstehen und unsere eigene Sicht erweitern."
     },
     {
@@ -402,6 +435,7 @@
       "question": "Welche Kunstrichtung ist bekannt dafür, Träume und das Unterbewusstsein darzustellen?",
       "options": ["Realismus", "Surrealismus", "Impressionismus"],
       "correctIndex": 1,
+      "points": { "bildung": 1, "gemeinschaft": 1, "glueck": 0 },
       "insight": "Unsere innere Welt ist genauso reich und bedeutsam wie die äußere. Kreativität beginnt im Kopf."
     },
     {
@@ -412,6 +446,7 @@
       "question": "Wie heißt die einflussreiche deutsche Kunstschule, die 1919 gegründet wurde und Design neu definierte?",
       "options": ["Kunstakademie Düsseldorf", "Bauhaus", "Akademie der Bildenden Künste München"],
       "correctIndex": 1,
+      "points": { "bildung": 1, "gemeinschaft": 1, "glueck": 0 },
       "insight": "Form und Funktion gemeinsam zu denken schafft zeitlosen Wert. Gutes Design verbessert den Alltag."
     },
     {
@@ -422,6 +457,7 @@
       "question": "Wie viele UNESCO-Welterbestätten hat Deutschland ungefähr?",
       "options": ["Unter 10", "Etwa 50", "Über 150"],
       "correctIndex": 1,
+      "points": { "bildung": 1, "gemeinschaft": 1, "glueck": 0 },
       "insight": "Kulturelle Vielfalt ist ein Schatz, den es zu bewahren und mit anderen zu teilen gilt."
     }
   ]

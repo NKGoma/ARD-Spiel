@@ -367,9 +367,9 @@ html, body {
   background: rgba(255,255,255,0.1);
   transform: scale(1.06);
 }
-.sc-avatar { font-size: 18px; line-height: 1; }
-.sc-name   { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.6); max-width: 64px; overflow: hidden; text-overflow: ellipsis; }
-.sc-points { font-size: 12px; font-weight: 900; color: #ffd700; }
+.sc-avatar { font-size: 18px; line-height: 1; flex-shrink: 0; }
+.sc-name   { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.7); max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-points { font-size: 13px; font-weight: 900; color: #ffd700; margin-left: auto; padding-left: 4px; flex-shrink: 0; }
 
 /* ── Board Wrapper ── */
 .board-wrapper {
@@ -463,8 +463,9 @@ html, body {
   display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
 }
 .cp-avatar { font-size: 26px; line-height: 1; flex-shrink: 0; }
-.cp-name   { font-size: 15px; font-weight: 800; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cp-label  { font-size: 11px; color: rgba(255,255,255,0.35); flex-shrink: 0; }
+.cp-text   { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.cp-name   { font-size: 16px; font-weight: 900; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cp-label  { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.35); }
 .roll-btn {
   flex-shrink: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -832,6 +833,112 @@ html, body {
 .btn-new-game:hover {
   background: rgba(255,255,255,0.06);
   border-color: rgba(255,255,255,0.2);
+}
+
+/* ════════════════════════════════════════
+   HANDOFF SCREEN (pass-and-play)
+════════════════════════════════════════ */
+#screen-handoff {
+  cursor: pointer;
+  align-items: center; justify-content: center;
+  transition: background 0.4s ease;
+}
+.handoff-content {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 10px;
+  padding: 32px 24px; text-align: center;
+  animation: handoffIn 0.45s cubic-bezier(0.34,1.4,0.64,1) both;
+}
+@keyframes handoffIn {
+  from { transform: scale(0.75); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+.handoff-avatar {
+  font-size: 72px; line-height: 1;
+  animation: handoffBounce 0.9s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 20px rgba(255,255,255,0.2));
+}
+@keyframes handoffBounce {
+  from { transform: scale(1)    translateY(0); }
+  to   { transform: scale(1.1)  translateY(-8px); }
+}
+.handoff-name {
+  font-size: 36px; font-weight: 900; letter-spacing: -1px;
+  text-shadow: 0 0 40px currentColor;
+}
+.handoff-label {
+  font-size: 16px; font-weight: 800; letter-spacing: 4px;
+  color: rgba(255,255,255,0.5); text-transform: uppercase;
+  margin-top: 4px;
+}
+.handoff-cta {
+  margin-top: 28px; font-size: 12px; font-weight: 800;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 30px; padding: 10px 24px;
+  animation: handoffCtaPulse 1.5s ease-in-out infinite alternate;
+}
+@keyframes handoffCtaPulse {
+  from { border-color: rgba(255,255,255,0.12); color: rgba(255,255,255,0.3); }
+  to   { border-color: rgba(255,255,255,0.35); color: rgba(255,255,255,0.65); }
+}
+
+/* ════════════════════════════════════════
+   BOARD LEGEND
+════════════════════════════════════════ */
+.board-legend {
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 10px; overflow-x: auto;
+  background: rgba(0,0,0,0.3);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  scrollbar-width: none;
+}
+.board-legend::-webkit-scrollbar { display: none; }
+.legend-pill {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 10px; font-weight: 700;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px; padding: 3px 8px;
+  color: rgba(255,255,255,0.5); white-space: nowrap; flex-shrink: 0;
+}
+.legend-pill--bonus { border-color: rgba(255,215,0,0.3); color: #ffd700; background: rgba(255,215,0,0.06); }
+.legend-pill--duel  { border-color: rgba(255,80,0,0.35);  color: #ff9060; background: rgba(255,80,0,0.06);  }
+.legend-pill--event { border-color: rgba(0,100,255,0.35); color: #64b5f6; background: rgba(0,100,255,0.06); }
+.legend-pill--end   { border-color: rgba(255,215,0,0.5);  color: #ffd700; background: rgba(255,215,0,0.1);  }
+
+/* ════════════════════════════════════════
+   SCORE CARD LIFE STATS
+════════════════════════════════════════ */
+.sc-info {
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+}
+.sc-life {
+  display: flex; gap: 5px;
+}
+.sc-life-stat {
+  font-size: 10px; font-weight: 800;
+  color: rgba(255,255,255,0.45); white-space: nowrap;
+}
+
+/* ════════════════════════════════════════
+   WINNER LIFE AWARDS
+════════════════════════════════════════ */
+.winner-life-awards {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  justify-content: center;
+  width: 100%; max-width: 340px;
+  margin-top: 4px;
+  animation: fadeUp 0.5s 0.4s ease both;
+}
+.winner-award-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px; padding: 6px 12px;
+  font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.65);
 }
 
 /* ════════════════════════════════════════

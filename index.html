@@ -45,16 +45,35 @@
       <div class="board-grid" id="board-grid"></div>
       <div class="token-layer" id="token-layer"></div>
     </div>
+    <div class="board-legend">
+      <span class="legend-pill">🧠 Frage</span>
+      <span class="legend-pill legend-pill--bonus">⭐ Bonus</span>
+      <span class="legend-pill legend-pill--duel">⚔️ Duell</span>
+      <span class="legend-pill legend-pill--event">📺 Event</span>
+      <span class="legend-pill legend-pill--end">🏆 Ziel</span>
+    </div>
     <div class="turn-controls" id="turn-controls">
       <div class="current-player-info" id="current-player-info">
         <span class="cp-avatar" id="cp-avatar"></span>
-        <span class="cp-name"   id="cp-name"></span>
-        <span class="cp-label">ist dran</span>
+        <div class="cp-text">
+          <span class="cp-name" id="cp-name"></span>
+          <span class="cp-label">ist dran</span>
+        </div>
       </div>
       <button class="roll-btn" id="roll-btn" onclick="Game.roll()">
         <span class="roll-dice-face" id="roll-dice-face">🎲</span>
         <span class="roll-label">WÜRFELN!</span>
       </button>
+    </div>
+  </section>
+
+  <!-- ══ S3b: Handoff Screen (pass-and-play) ══ -->
+  <section id="screen-handoff" class="screen" onclick="Game.dismissHandoff()">
+    <div class="handoff-content">
+      <div class="handoff-avatar" id="ho-avatar"></div>
+      <div class="handoff-name"   id="ho-name"></div>
+      <div class="handoff-label">IST DRAN!</div>
+      <div class="handoff-cta">TIPPE UM ZU SPIELEN ›</div>
     </div>
   </section>
 
@@ -115,6 +134,7 @@
     <div class="winner-inner">
       <div class="winner-headline">🏆 Spielende!</div>
       <div class="winner-podium" id="winner-podium"></div>
+      <div class="winner-life-awards" id="winner-life-awards"></div>
       <div class="winner-btns">
         <button class="btn-rematch" onclick="Game.rematch()">Nochmal! 🔄</button>
         <button class="btn-new-game" onclick="Game.goSetup()">Neue Spieler</button>

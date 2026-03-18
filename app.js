@@ -233,6 +233,7 @@ let gameState = {
   skipNextPlayer: false,
   bonusNextGlobal: false,
   pendingDuel: null,
+  _handoffCallback: null,
 };
 
 function currentPlayer() {
@@ -261,8 +262,25 @@ function nextTurn() {
 
   gameState.currentPlayerIdx = next;
   gameState.phase = 'roll';
-  updateTurnControls();
   updateScoreStrip();
+
+  // Show pass-and-play handoff screen
+  showHandoff(gameState.players[next], () => {
+    updateTurnControls();
+  });
+}
+
+/* ═════════════════════════════════════════
+   HANDOFF SCREEN
+═════════════════════════════════════════ */
+function showHandoff(player, onTap) {
+  gameState._handoffCallback = onTap;
+  document.getElementById('ho-avatar').textContent = player.avatar;
+  document.getElementById('ho-name').textContent   = player.name || `Spieler`;
+  document.getElementById('ho-name').style.color   = player.color;
+  document.getElementById('screen-handoff').style.background =
+    `radial-gradient(ellipse at 50% 40%, ${player.color}22 0%, #08080f 65%)`;
+  showScreen('screen-handoff');
 }
 
 /* ═════════════════════════════════════════
@@ -470,6 +488,14 @@ function renderTokens() {
 /* ═════════════════════════════════════════
    SCORE STRIP
 ═════════════════════════════════════════ */
+function lifeStatsHtml(p) {
+  return `<div class="sc-life" id="sc-life-${p.id}">
+    <span class="sc-life-stat">📚${p.bildung}</span>
+    <span class="sc-life-stat">🤝${p.gemeinschaft}</span>
+    <span class="sc-life-stat">🍀${p.glueck}</span>
+  </div>`;
+}
+
 function renderScoreStrip() {
   const strip = document.getElementById('score-strip');
   strip.innerHTML = '';
@@ -480,8 +506,11 @@ function renderScoreStrip() {
     card.style.borderColor = p.color;
     card.innerHTML = `
       <span class="sc-avatar">${p.avatar}</span>
-      <span class="sc-name">${p.name || 'Spieler'}</span>
-      <span class="sc-points" id="sc-pts-${p.id}">${p.points} ⭐</span>
+      <div class="sc-info">
+        <span class="sc-name">${p.name || 'Spieler'}</span>
+        ${lifeStatsHtml(p)}
+      </div>
+      <span class="sc-points" id="sc-pts-${p.id}">${p.points}⭐</span>
     `;
     strip.appendChild(card);
   });
@@ -489,12 +518,16 @@ function renderScoreStrip() {
 
 function updateScoreStrip() {
   gameState.players.forEach(p => {
-    const el = document.getElementById(`sc-pts-${p.id}`);
-    if (el) el.textContent = `${p.points} ⭐`;
+    const pts = document.getElementById(`sc-pts-${p.id}`);
+    if (pts) pts.textContent = `${p.points}⭐`;
+    const life = document.getElementById(`sc-life-${p.id}`);
+    if (life) life.innerHTML = `
+      <span class="sc-life-stat">📚${p.bildung}</span>
+      <span class="sc-life-stat">🤝${p.gemeinschaft}</span>
+      <span class="sc-life-stat">🍀${p.glueck}</span>
+    `;
     const card = document.getElementById(`score-card-${p.id}`);
-    if (card) {
-      card.classList.toggle('score-card--active', p.id === currentPlayer().id);
-    }
+    if (card) card.classList.toggle('score-card--active', p.id === currentPlayer().id);
   });
 }
 
@@ -687,6 +720,12 @@ function resolveAnswer(selectedIdx, q, player, pts, clickedBtn, optsEl) {
 
   if (correct) {
     player.points += pts;
+    // Life stats: scale by pts multiplier vs base 2
+    const multiplier = pts / 2;
+    const lp = q.points || {};
+    player.bildung      += Math.round((lp.bildung      || 0) * multiplier);
+    player.gemeinschaft += Math.round((lp.gemeinschaft || 0) * multiplier);
+    player.glueck       += Math.round((lp.glueck       || 0) * multiplier);
     flashScreen('correct');
     synthCorrect();
     if (navigator.vibrate) navigator.vibrate(50);
@@ -1037,6 +1076,26 @@ function endGame() {
     podium.appendChild(row);
   });
 
+  // Life Awards
+  const awardsEl = document.getElementById('winner-life-awards');
+  if (awardsEl) {
+    awardsEl.innerHTML = '';
+    const awards = [
+      { key:'bildung',      icon:'📚', label:'Bildung',       color:'#81c784' },
+      { key:'gemeinschaft', icon:'🤝', label:'Gemeinschaft',  color:'#64b5f6' },
+      { key:'glueck',       icon:'🍀', label:'Lebensfreude',  color:'#ffcc02' },
+    ];
+    awards.forEach(a => {
+      const winner = [...gameState.players].sort((x,y) => y[a.key] - x[a.key])[0];
+      if (winner[a.key] === 0) return;
+      const pill = document.createElement('div');
+      pill.className = 'winner-award-pill';
+      pill.style.borderColor = a.color + '55';
+      pill.innerHTML = `<span>${a.icon}</span><span style="color:${a.color}">${a.label}</span><span>${winner.avatar} ${winner.name}</span>`;
+      awardsEl.appendChild(pill);
+    });
+  }
+
   // Confetti
   setTimeout(() => spawnConfetti(document.getElementById('winner-particles')), 400);
 }
@@ -1068,12 +1127,15 @@ const Game = {
     for (let i = 0; i < setupPlayerCount; i++) {
       const sp = setupPlayers[i];
       gameState.players.push({
-        id:       `p${i+1}`,
-        name:     sp.name || `Spieler ${i+1}`,
-        avatar:   sp.avatar,
-        color:    sp.color,
-        position: 0,
-        points:   0,
+        id:           `p${i+1}`,
+        name:         sp.name || `Spieler ${i+1}`,
+        avatar:       sp.avatar,
+        color:        sp.color,
+        position:     0,
+        points:       0,
+        bildung:      0,
+        gemeinschaft: 0,
+        glueck:       0,
       });
     }
     gameState.currentPlayerIdx   = 0;
@@ -1091,8 +1153,11 @@ const Game = {
     renderScoreStrip();
     updateTurnControls();
 
+    // First player handoff
+    const first = gameState.players[0];
     setTimeout(() => {
       showNarrator('🎲 Das Spiel beginnt! Viel Erfolg!', 2000);
+      setTimeout(() => showHandoff(first, () => updateTurnControls()), 2200);
     }, 400);
   },
 
@@ -1114,9 +1179,16 @@ const Game = {
     });
   },
 
+  dismissHandoff() {
+    const cb = gameState._handoffCallback;
+    gameState._handoffCallback = null;
+    showScreen('screen-board');
+    if (cb) cb();
+  },
+
   rematch() {
     // Same players, reset everything
-    gameState.players.forEach(p => { p.position = 0; p.points = 0; });
+    gameState.players.forEach(p => { p.position = 0; p.points = 0; p.bildung = 0; p.gemeinschaft = 0; p.glueck = 0; });
     gameState.currentPlayerIdx   = 0;
     gameState.phase              = 'roll';
     gameState.seenQuestions      = [];
@@ -1132,7 +1204,11 @@ const Game = {
     renderScoreStrip();
     updateTurnControls();
 
-    setTimeout(() => showNarrator('🔄 Nochmal! Zeigt, was ihr drauf habt!', 2000), 400);
+    const first = gameState.players[0];
+    setTimeout(() => {
+      showNarrator('🔄 Nochmal! Zeigt, was ihr drauf habt!', 2000);
+      setTimeout(() => showHandoff(first, () => updateTurnControls()), 2200);
+    }, 400);
   },
 };
 
