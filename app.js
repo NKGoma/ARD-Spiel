@@ -1,9 +1,9 @@
 /* ══════════════════════════════════════════
    ARD Life – Pokemon × ARD Mediathek
-   app.js  —  game engine
+   app.js  v3  —  game engine
 ══════════════════════════════════════════ */
 
-const LETTERS = ['A', 'B', 'C'];
+const LETTERS    = ['A', 'B', 'C'];
 const RUN_LENGTH = 5; // questions per world run
 
 /* ─────────────────────────────────────────
@@ -18,6 +18,7 @@ const WORLDS = {
     surface: 'rgba(255,255,255,0.08)', surfaceHov: 'rgba(255,255,255,0.14)',
     btnBg: '#2e7d32', btnText: '#e8f5e9',
     zoneFill: 'rgba(76,175,80,0.2)', zoneSize: 230,
+    ambientChars: ['?', '!', '💡', '📚'],
   },
   sport: {
     bg: 'linear-gradient(155deg,#04080f,#071830)',
@@ -27,6 +28,7 @@ const WORLDS = {
     surface: 'rgba(255,255,255,0.06)', surfaceHov: 'rgba(255,255,255,0.12)',
     btnBg: '#1565c0', btnText: '#e3f2fd',
     zoneFill: 'rgba(25,118,210,0.18)', zoneSize: 210,
+    ambientChars: ['⚡', '▶', '◆', '●'],
   },
   musik: {
     bg: 'linear-gradient(155deg,#06010f,#15063a)',
@@ -36,6 +38,7 @@ const WORLDS = {
     surface: 'rgba(255,255,255,0.06)', surfaceHov: 'rgba(255,255,255,0.11)',
     btnBg: '#6a1b9a', btnText: '#f3e5f5',
     zoneFill: 'rgba(156,39,176,0.2)', zoneSize: 215,
+    ambientChars: ['♪', '♫', '♬', '🎵'],
   },
   humor: {
     bg: 'linear-gradient(155deg,#3f0f00,#9f2900)',
@@ -45,6 +48,7 @@ const WORLDS = {
     surface: 'rgba(255,255,255,0.1)', surfaceHov: 'rgba(255,255,255,0.17)',
     btnBg: '#bf360c', btnText: '#fff8e1',
     zoneFill: 'rgba(230,74,25,0.18)', zoneSize: 200,
+    ambientChars: ['★', '✦', '✨', '•'],
   },
   geschichte: {
     bg: 'linear-gradient(155deg,#080400,#1f1000)',
@@ -54,6 +58,7 @@ const WORLDS = {
     surface: 'rgba(255,200,130,0.07)', surfaceHov: 'rgba(255,200,130,0.13)',
     btnBg: '#5d4037', btnText: '#fdf0d5',
     zoneFill: 'rgba(141,110,99,0.18)', zoneSize: 205,
+    ambientChars: ['◎', '✦', '○', '△'],
   },
   kultur: {
     bg: 'linear-gradient(155deg,#020204,#0a0a14)',
@@ -63,6 +68,7 @@ const WORLDS = {
     surface: 'rgba(255,255,255,0.05)', surfaceHov: 'rgba(255,255,255,0.09)',
     btnBg: '#37474f', btnText: '#eceff1',
     zoneFill: 'rgba(96,125,139,0.18)', zoneSize: 195,
+    ambientChars: ['◇', '□', '○', '△'],
   },
 };
 
@@ -120,7 +126,7 @@ const NODE_POS = {
   kultur:      { x: 14, y: 63 },
 };
 
-const PATH = ['grundwissen','sport','musik','humor','geschichte','kultur'];
+const PATH        = ['grundwissen','sport','musik','humor','geschichte','kultur'];
 const CONNECTIONS = PATH.slice(0,-1).map((id,i) => [id, PATH[i+1]]);
 
 /* ─────────────────────────────────────────
@@ -130,10 +136,8 @@ const STATE_KEY = 'ard_state_v2';
 let DATA = null;
 let state = null;
 let currentMapNode = 'grundwissen';
-
-// Active run (not persisted – session only)
-let currentRun = null;
-// { catId, questions:[...5], levelIdx:0, results:[], correct:0 }
+let currentRun     = null; // { catId, questions, levelIdx, results, correct }
+let _typerInterval = null; // active typewriter interval ref
 
 function defaultState(cats) {
   const scores = {};
@@ -203,8 +207,195 @@ function applyWorldTheme(w) {
     el.style.setProperty('--quiz-btn-bg',        w.btnBg);
     el.style.setProperty('--quiz-btn-text',      w.btnText);
   });
+  // HP bar color
+  const hpFill = document.getElementById('hp-bar-fill');
+  if (hpFill) hpFill.style.background = w.accent;
+  // Insight bar color
   const bar = document.getElementById('insight-bar');
   if (bar) bar.style.background = w.accent;
+}
+
+/* ─────────────────────────────────────────
+   BATTLE INTRO ANIMATION
+   Pokemon encounter flash effect
+───────────────────────────────────────── */
+function battleIntro(catId, callback) {
+  const w   = WORLDS[catId];
+  const cat = DATA.categories.find(c => c.id === catId);
+  const bi  = document.getElementById('battle-intro');
+
+  if (!bi) { callback(); return; }
+
+  // Style the overlay background to match world
+  bi.style.background = w.bg;
+
+  // Inject world name
+  const nameEl  = document.getElementById('bi-world-name');
+  const eyeEl   = bi.querySelector('.bi-eyebrow');
+  if (nameEl) {
+    nameEl.textContent   = `${cat.emoji}  ${cat.label}`;
+    nameEl.style.color   = w.accent;
+    nameEl.style.textShadow = `0 0 40px ${w.accentGlow}`;
+  }
+  if (eyeEl) eyeEl.textContent = '— Betreten —';
+
+  // Trigger animation
+  bi.classList.remove('fadeout');
+  bi.classList.add('active');
+
+  // After 1.35s start fadeout, then callback
+  setTimeout(() => {
+    bi.classList.add('fadeout');
+    setTimeout(() => {
+      bi.classList.remove('active','fadeout');
+      callback();
+    }, 380);
+  }, 1350);
+}
+
+/* ─────────────────────────────────────────
+   TYPEWRITER EFFECT
+───────────────────────────────────────── */
+function typewriterQuestion(text, onComplete) {
+  // Clear any previous typewriter
+  if (_typerInterval) { clearInterval(_typerInterval); _typerInterval = null; }
+
+  const el = document.getElementById('quiz-question');
+  el.textContent = '';
+  el.style.animation = 'none';
+  void el.offsetWidth;
+  el.style.animation = '';
+
+  // Add blinking cursor
+  const cursor = document.createElement('span');
+  cursor.className = 'typewriter-cursor';
+  el.appendChild(cursor);
+
+  let i = 0;
+  const CHAR_DELAY = 22; // ms per character
+
+  const finish = () => {
+    clearInterval(_typerInterval);
+    _typerInterval = null;
+    el.textContent = text; // remove cursor, show full text
+    onComplete();
+  };
+
+  // Tap anywhere on question to skip
+  el.addEventListener('click', finish, { once: true });
+
+  _typerInterval = setInterval(() => {
+    if (i >= text.length) { finish(); return; }
+    el.textContent = text.slice(0, ++i);
+    el.appendChild(cursor); // keep cursor at end
+  }, CHAR_DELAY);
+}
+
+/* ─────────────────────────────────────────
+   HP BAR
+───────────────────────────────────────── */
+function updateHpBar(levelIdx) {
+  const fill = document.getElementById('hp-bar-fill');
+  if (!fill) return;
+  const pct   = ((RUN_LENGTH - levelIdx) / RUN_LENGTH * 100).toFixed(1);
+  fill.style.width = pct + '%';
+  // Color shifts green→yellow→red as HP depletes
+  if (pct > 60) {
+    fill.style.background = 'var(--quiz-accent)';
+  } else if (pct > 30) {
+    fill.style.background = '#ffcc02';
+  } else {
+    fill.style.background = '#ef5350';
+  }
+  const w = currentRun ? WORLDS[currentRun.catId] : null;
+  if (w && pct > 60) {
+    fill.style.boxShadow = `0 0 10px ${w.accentGlow}`;
+  } else {
+    fill.style.boxShadow = '0 0 10px rgba(255,80,80,0.4)';
+  }
+}
+
+/* ─────────────────────────────────────────
+   AMBIENT FLOATING ELEMENTS
+───────────────────────────────────────── */
+function createAmbientElements(catId) {
+  clearAmbient();
+  const w   = WORLDS[catId];
+  const el  = document.getElementById('screen-quiz');
+  if (!el || !w.ambientChars) return;
+
+  const wrap = document.createElement('div');
+  wrap.id = 'ambient-wrap';
+  wrap.style.cssText = `
+    position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;
+  `;
+
+  const count = 10;
+  for (let i = 0; i < count; i++) {
+    const piece = document.createElement('div');
+    const char  = w.ambientChars[Math.floor(Math.random() * w.ambientChars.length)];
+    const size  = 12 + Math.random() * 18;
+    const left  = (5 + Math.random() * 90).toFixed(1);
+    const delay = (Math.random() * 12).toFixed(2);
+    const dur   = (8 + Math.random() * 10).toFixed(2);
+
+    piece.textContent = char;
+    piece.style.cssText = `
+      position:absolute;
+      left:${left}%;
+      bottom:${(Math.random() * 30).toFixed(1)}%;
+      font-size:${size}px;
+      opacity:0;
+      color:${w.accent};
+      animation:particleDrift ${dur}s ${delay}s linear infinite;
+      filter:blur(0.5px);
+    `;
+    wrap.appendChild(piece);
+  }
+
+  el.appendChild(wrap);
+}
+
+function clearAmbient() {
+  const el = document.getElementById('ambient-wrap');
+  if (el) el.remove();
+}
+
+/* ─────────────────────────────────────────
+   SCREEN FLASH  (correct / wrong)
+───────────────────────────────────────── */
+function flashScreen(type) {
+  const el = document.getElementById('screen-flash');
+  if (!el) return;
+  el.className = 'screen-flash';
+  void el.offsetWidth;
+  el.className = `screen-flash flash-${type}`;
+  setTimeout(() => { el.className = 'screen-flash'; }, 500);
+}
+
+/* ─────────────────────────────────────────
+   CONFETTI
+───────────────────────────────────────── */
+function launchConfetti(w) {
+  const container = document.getElementById('screen-complete');
+  if (!container) return;
+  const colors = [w.accent, '#ffd700', '#ff6b9d', '#00d4ff', w.accentGlow, '#fff'];
+
+  for (let i = 0; i < 32; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    const size = 4 + Math.random() * 9;
+    piece.style.cssText = `
+      left:${(Math.random() * 100).toFixed(1)}%;
+      width:${size}px; height:${size * (0.5 + Math.random())}px;
+      background:${colors[Math.floor(Math.random() * colors.length)]};
+      animation-delay:${(Math.random() * 0.8).toFixed(2)}s;
+      animation-duration:${(1.8 + Math.random() * 1.5).toFixed(2)}s;
+      border-radius:${Math.random() > 0.4 ? '50%' : '2px'};
+    `;
+    container.appendChild(piece);
+    setTimeout(() => piece.remove(), 4000);
+  }
 }
 
 /* ═════════════════════════════════════════
@@ -228,7 +419,7 @@ function generateStars() {
   const c = document.getElementById('map-stars');
   if (c.childElementCount > 0) return;
   for (let i = 0; i < 65; i++) {
-    const s = document.createElement('div');
+    const s  = document.createElement('div');
     s.className = 'map-star';
     const sz = 1 + Math.random() * 2.5;
     s.style.cssText = `
@@ -277,7 +468,7 @@ function renderPaths() {
     line.setAttribute('x1',x1); line.setAttribute('y1',y1);
     line.setAttribute('x2',x2); line.setAttribute('y2',y2);
     line.setAttribute('stroke', unlocked ? WORLDS[a].accent : 'rgba(255,255,255,0.15)');
-    line.setAttribute('stroke-width', '2');
+    line.setAttribute('stroke-width','2');
     line.classList.add('map-path', ...(unlocked ? [] : ['locked']));
     svg.appendChild(line);
   });
@@ -387,7 +578,7 @@ function renderMissionHUD() {
   const comboEl = document.getElementById('mission-combo');
   if (comboEl) {
     if (state.streak >= 2) {
-      comboEl.textContent = `🔥 ×${state.streak}`;
+      comboEl.textContent   = `🔥 ×${state.streak}`;
       comboEl.style.display = 'block';
     } else {
       comboEl.style.display = 'none';
@@ -421,8 +612,8 @@ function setupSwipe() {
     sx = e.touches[0].clientX; sy = e.touches[0].clientY;
   }, { passive: true });
   mw.addEventListener('touchend', e => {
-    const dx = sx - e.changedTouches[0].clientX;
-    const dy = sy - e.changedTouches[0].clientY;
+    const dx  = sx - e.changedTouches[0].clientX;
+    const dy  = sy - e.changedTouches[0].clientY;
     const idx = PATH.indexOf(currentMapNode);
     if (Math.abs(dx) > Math.abs(dy)) {
       if (dx >  45 && PATH[idx+1]) movePlayerTo(PATH[idx+1]);
@@ -449,14 +640,17 @@ function startRun(catId) {
     saveState();
     pool = [...all];
   }
-  // Shuffle + pick 5
-  const shuffled = pool.sort(() => Math.random() - 0.5);
+  const shuffled  = pool.sort(() => Math.random() - 0.5);
   const questions = shuffled.slice(0, RUN_LENGTH);
 
   currentRun = { catId, questions, levelIdx: 0, correct: 0, results: [] };
-
   applyWorldTheme(w);
-  showQuizLevel();
+
+  // Battle intro → then show quiz
+  battleIntro(catId, () => {
+    createAmbientElements(catId);
+    showQuizLevel();
+  });
 }
 
 function showQuizLevel() {
@@ -466,34 +660,28 @@ function showQuizLevel() {
   const cat = DATA.categories.find(c => c.id === catId);
 
   /* topbar */
-  document.getElementById('battle-world-name').textContent  = `${cat.emoji} ${cat.label}`;
-  document.getElementById('quiz-points').textContent        = state.points;
+  document.getElementById('battle-world-name').textContent = `${cat.emoji} ${cat.label}`;
+  document.getElementById('quiz-points').textContent       = state.points;
 
-  /* level label + pips */
-  document.getElementById('level-track-label').textContent  =
+  /* level label + pips + HP bar */
+  document.getElementById('level-track-label').textContent =
     `LEVEL ${levelIdx + 1} / ${RUN_LENGTH}`;
   updatePips();
 
   /* content card */
   document.getElementById('quiz-source').textContent = q.title;
   const link = document.getElementById('content-link');
-  link.href = q.url;
+  link.href        = q.url;
   link.textContent = 'ardmediathek.de →';
 
-  /* question (animate fresh) */
-  const qEl = document.getElementById('quiz-question');
-  qEl.style.animation = 'none';
-  void qEl.offsetWidth;
-  qEl.textContent    = q.question;
-  qEl.style.animation = '';
-
-  /* options */
+  /* render options FIRST (hidden), then typewriter */
   const optsEl = document.getElementById('quiz-options');
   optsEl.innerHTML = '';
+  optsEl.classList.add('hidden'); // dimmed + non-interactive during typewriter
+
   q.options.forEach((opt, i) => {
     const btn = document.createElement('button');
     btn.className = 'option-btn';
-    btn.style.animationDelay = `${i * 75}ms`;
     btn.innerHTML = `
       <span class="option-letter">${LETTERS[i]}</span>
       <span class="option-text">${opt}</span>
@@ -503,6 +691,19 @@ function showQuizLevel() {
   });
 
   showScreen('screen-quiz');
+
+  /* typewriter question — reveals options when done */
+  typewriterQuestion(q.question, () => {
+    optsEl.classList.remove('hidden');
+    // cascade animation on buttons
+    optsEl.querySelectorAll('.option-btn').forEach((btn, i) => {
+      btn.style.opacity         = '0';
+      btn.style.animation       = 'none';
+      void btn.offsetWidth;
+      btn.style.animation       = 'optionIn 0.32s ease forwards';
+      btn.style.animationDelay  = `${i * 80}ms`;
+    });
+  });
 }
 
 function updatePips() {
@@ -516,39 +717,55 @@ function updatePips() {
       pip.classList.add('current');
     }
   });
+  updateHpBar(levelIdx);
 }
 
 function submitAnswer(selectedIndex, clickedBtn) {
+  // Disable all options immediately
+  document.querySelectorAll('.option-btn').forEach(b => (b.disabled = true));
+
+  // Lock-in state: brief pulse before reveal
+  clickedBtn.classList.add('locking');
+
+  setTimeout(() => {
+    clickedBtn.classList.remove('locking');
+    revealAnswer(selectedIndex, clickedBtn);
+  }, 300);
+}
+
+function revealAnswer(selectedIndex, clickedBtn) {
   const q       = currentRun.questions[currentRun.levelIdx];
   const correct = selectedIndex === q.correctIndex;
 
-  document.querySelectorAll('.option-btn').forEach(b => (b.disabled = true));
   document.querySelectorAll('.option-btn')[q.correctIndex].classList.add('correct');
   if (!correct) clickedBtn.classList.add('wrong');
 
   currentRun.results.push(correct);
+
   if (correct) {
-    state.points += 1;
-    state.streak += 1;
+    state.points  += 1;
+    state.streak  += 1;
     if (state.streak > state.maxStreak) state.maxStreak = state.streak;
     if (state.streak % 3 === 0) state.points += 1; // combo bonus
     currentRun.correct += 1;
+    flashScreen('correct');
     createSparkles(clickedBtn);
   } else {
     state.streak = 0;
+    flashScreen('wrong');
     shakeScreen();
   }
 
   if (!state.seen.includes(q.id)) state.seen.push(q.id);
   saveState();
 
-  setTimeout(() => showFeedback(correct), 680);
+  setTimeout(() => showFeedback(correct), 700);
 }
 
 function showFeedback(correct) {
   const { catId, levelIdx, results, questions } = currentRun;
-  const q = questions[levelIdx];
-  const w = WORLDS[catId];
+  const q      = questions[levelIdx];
+  const w      = WORLDS[catId];
   const isLast = levelIdx === RUN_LENGTH - 1;
 
   const streak   = state.streak;
@@ -559,27 +776,27 @@ function showFeedback(correct) {
     correct ? (streak >= 3 ? '🔥' : '🎉') : '😌';
 
   const result = document.getElementById('fb-result');
-  result.textContent = correct ? `Richtig!${combo}${bonusTxt}` : 'Leider falsch.';
+  result.textContent  = correct ? `Richtig!${combo}${bonusTxt}` : 'Leider falsch.';
   result.style.animation = 'none';
   void result.offsetWidth;
   result.style.animation = '';
 
   const cl = document.getElementById('fb-correct-label');
   if (!correct) {
-    cl.textContent = `✓ ${q.options[q.correctIndex]}`;
-    cl.style.display = 'block';
+    cl.textContent    = `✓ ${q.options[q.correctIndex]}`;
+    cl.style.display  = 'block';
   } else {
-    cl.style.display = 'none';
+    cl.style.display  = 'none';
   }
 
-  document.getElementById('fb-insight').textContent = q.insight;
+  document.getElementById('fb-insight').textContent       = q.insight;
   document.getElementById('insight-bar').style.background = w.accent;
 
   const link = document.getElementById('fb-link');
   link.href        = q.url;
   link.textContent = `${q.title} →`;
 
-  /* ── Weiter button ── */
+  /* Weiter button */
   const btn = document.getElementById('btn-weiter');
   if (isLast) {
     btn.textContent      = 'Welt abschließen →';
@@ -604,9 +821,7 @@ function showFeedback(correct) {
     setTimeout(() => pf.classList.remove('floating'), 1200);
   }
 
-  /* update pips progress */
   updatePips();
-
   document.getElementById('quiz-points').textContent = state.points;
   showScreen('screen-feedback');
 }
@@ -620,62 +835,57 @@ function finishRun() {
   const { catId, correct } = currentRun;
   const w = WORLDS[catId];
 
-  // Snapshot unlocked state before updating score
   const unlockedBefore = DATA.categories.map(c => ({ id: c.id, was: isUnlocked(c.id) }));
 
-  // Update best score
   state.scores[catId] = Math.max(state.scores[catId] || 0, correct);
   state.streak = 0;
   saveState();
 
-  // Detect new unlocks
   const newUnlocks = DATA.categories.filter(c => {
     const before = unlockedBefore.find(u => u.id === c.id);
     return before && !before.was && isUnlocked(c.id);
   });
 
+  clearAmbient();
   showCompletion(correct, newUnlocks, w);
 }
 
 function showCompletion(correct, newUnlocks, w) {
   applyWorldTheme(w);
 
-  // Dynamic background blob
   const bg = document.getElementById('complete-bg');
   bg.style.cssText = `
     position:absolute;inset:0;
-    background: radial-gradient(ellipse at 50% 40%, ${w.accentGlow}30 0%, transparent 65%);
+    background: radial-gradient(ellipse at 50% 40%, ${w.accentGlow}35 0%, transparent 65%);
     pointer-events:none;z-index:0;
   `;
 
-  // Trophy emoji by score
   const trophies = ['😅','😤','🌟','🏅','🥇','🏆'];
   document.getElementById('complete-trophy').textContent = trophies[correct] || '🏆';
 
-  // Title
   document.getElementById('complete-title').textContent =
     correct >= 4 ? 'Welt gemeistert!' :
     correct >= 2 ? 'Welt beendet!'    : 'Weiter kämpfen!';
 
-  // Stars
+  /* Stars with staggered delay */
   const starsEl = document.getElementById('complete-stars');
   starsEl.innerHTML = '';
   for (let i = 0; i < RUN_LENGTH; i++) {
     const s = document.createElement('span');
     s.className = `complete-star${i >= correct ? ' empty' : ''}`;
     s.textContent = '⭐';
-    s.style.animationDelay = `${0.3 + i * 0.08}s`;
+    s.style.animationDelay = `${0.35 + i * 0.12}s`;
     starsEl.appendChild(s);
   }
 
   document.getElementById('complete-fraction').textContent =
     `${correct} von ${RUN_LENGTH} Fragen richtig`;
 
-  // New unlocks
+  /* Unlocks */
   const unlocksEl = document.getElementById('complete-unlocks');
   unlocksEl.innerHTML = '';
   newUnlocks.forEach(cat => {
-    const uw = WORLDS[cat.id];
+    const uw  = WORLDS[cat.id];
     const tag = document.createElement('div');
     tag.className = 'unlock-tag';
     tag.style.borderColor = uw.accent + '55';
@@ -687,6 +897,11 @@ function showCompletion(correct, newUnlocks, w) {
   });
 
   showScreen('screen-complete');
+
+  // Confetti for decent scores
+  if (correct >= 3) {
+    setTimeout(() => launchConfetti(w), 350);
+  }
 }
 
 /* ═════════════════════════════════════════
@@ -764,9 +979,9 @@ function renderWheel() {
   const leg = document.getElementById('wheel-legend');
   leg.innerHTML = '';
   DATA.categories.forEach(cat => {
-    const w = WORLDS[cat.id];
+    const w     = WORLDS[cat.id];
     const score = Math.min(state.scores[cat.id]||0,5);
-    const item = document.createElement('div');
+    const item  = document.createElement('div');
     item.className = 'legend-item';
     item.innerHTML = `
       <span class="legend-dot" style="background:${w.accent}"></span>
@@ -776,7 +991,7 @@ function renderWheel() {
 }
 
 /* ─── SVG helpers ─── */
-function polar(cx,cy,r,a) { return { x:cx+r*Math.cos(a), y:cy+r*Math.sin(a) }; }
+function polar(cx,cy,r,a)  { return { x:cx+r*Math.cos(a), y:cy+r*Math.sin(a) }; }
 function makeSector(cx,cy,r1,r2,sa,ea) {
   const p1=polar(cx,cy,r2,sa), p2=polar(cx,cy,r2,ea),
         p3=polar(cx,cy,r1,ea), p4=polar(cx,cy,r1,sa);
@@ -796,23 +1011,23 @@ function makeSVGEl(tag,attrs) {
 
 /* ─── Animation helpers ─── */
 function createSparkles(btn) {
-  const rect  = btn.getBoundingClientRect();
-  const cx    = rect.left + rect.width  / 2;
-  const cy    = rect.top  + rect.height / 2;
-  const w     = WORLDS[currentRun.catId];
-  for (let i = 0; i < 8; i++) {
-    const angle = (i / 8) * 2 * Math.PI;
-    const dist  = 48 + Math.random() * 28;
+  const rect = btn.getBoundingClientRect();
+  const cx   = rect.left + rect.width  / 2;
+  const cy   = rect.top  + rect.height / 2;
+  const w    = WORLDS[currentRun.catId];
+  for (let i = 0; i < 10; i++) {
+    const angle = (i / 10) * 2 * Math.PI + (Math.random() * 0.3);
+    const dist  = 44 + Math.random() * 32;
     const spark = document.createElement('div');
     spark.className = 'spark';
     spark.style.cssText = `
-      left:${cx}px; top:${cy}px; background:${w.accent};
+      left:${cx}px; top:${cy}px; background:${i % 2 === 0 ? w.accent : '#ffd700'};
       --dx:${(Math.cos(angle)*dist).toFixed(1)}px;
       --dy:${(Math.sin(angle)*dist).toFixed(1)}px;
     `;
     document.body.appendChild(spark);
     requestAnimationFrame(() => spark.classList.add('burst'));
-    setTimeout(() => spark.remove(), 600);
+    setTimeout(() => spark.remove(), 650);
   }
 }
 
@@ -827,16 +1042,19 @@ function shakeScreen() {
 /* ─── Start screen particles ─── */
 function createParticles() {
   const c = document.getElementById('particles');
-  for (let i = 0; i < 18; i++) {
-    const p = document.createElement('div');
+  for (let i = 0; i < 22; i++) {
+    const p  = document.createElement('div');
     p.className = 'particle';
-    const sz = 2 + Math.random() * 5;
+    const sz = 2 + Math.random() * 4;
+    // Blue-tinted particles to match ARD brand
+    const blue = Math.random() > 0.4;
     p.style.cssText = `
       width:${sz}px; height:${sz}px;
       left:${(Math.random()*100).toFixed(1)}%;
       bottom:${(Math.random()*40).toFixed(1)}%;
-      animation-delay:${(Math.random()*10).toFixed(2)}s;
-      animation-duration:${(7+Math.random()*9).toFixed(2)}s;
+      background:${blue ? `rgba(0,100,255,${(0.3+Math.random()*0.5).toFixed(2)})` : `rgba(255,255,255,${(0.2+Math.random()*0.4).toFixed(2)})`};
+      animation-delay:${(Math.random()*12).toFixed(2)}s;
+      animation-duration:${(8+Math.random()*9).toFixed(2)}s;
     `;
     c.appendChild(p);
   }
@@ -848,6 +1066,8 @@ function createParticles() {
 const App = {
   goMap() {
     currentRun = null;
+    clearAmbient();
+    if (_typerInterval) { clearInterval(_typerInterval); _typerInterval = null; }
     const mp = document.getElementById('map-points');
     if (mp) mp.textContent = state.points;
     renderMap();
@@ -865,8 +1085,9 @@ const App = {
   },
 
   abandonRun() {
-    // Leave mid-run – no score saved
     currentRun = null;
+    clearAmbient();
+    if (_typerInterval) { clearInterval(_typerInterval); _typerInterval = null; }
     App.goMap();
   },
 
@@ -882,9 +1103,10 @@ const App = {
 
   resetGame() {
     if (confirm('Wirklich zurücksetzen? Alle Punkte und Fortschritte werden gelöscht.')) {
-      state = defaultState(DATA.categories);
-      currentRun = null;
+      state          = defaultState(DATA.categories);
+      currentRun     = null;
       currentMapNode = 'grundwissen';
+      clearAmbient();
       saveState();
       App.goMap();
     }
@@ -909,11 +1131,11 @@ async function init() {
     });
   } catch (err) {
     document.body.innerHTML = `
-      <div style="padding:40px;color:#ff6b6b;font-family:sans-serif;line-height:1.7;background:#0e0e18;height:100vh">
-        <strong style="color:#E20015;font-size:20px">ARD Life</strong><br><br>
+      <div style="padding:40px;color:#aac8ff;font-family:sans-serif;line-height:1.7;background:#0d0d14;height:100vh">
+        <strong style="color:#0064ff;font-size:20px">ARD Life</strong><br><br>
         Ladefehler: ${err.message}<br><br>
         Öffne die App über einen lokalen Server:<br>
-        <code style="background:#1e1e2a;padding:6px 10px;border-radius:6px;display:inline-block;margin-top:6px">
+        <code style="background:#16162a;padding:6px 10px;border-radius:6px;display:inline-block;margin-top:6px">
           npx serve .
         </code>
       </div>`;

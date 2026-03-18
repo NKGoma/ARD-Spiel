@@ -71,14 +71,16 @@
       <div class="pts-badge">⭐ <span id="quiz-points">0</span></div>
     </header>
 
-    <!-- Level progress pips -->
+    <!-- HP Track + Level progress pips -->
     <div class="level-track-row">
       <span class="level-track-label" id="level-track-label">LEVEL 1 / 5</span>
-      <div class="level-pips" id="level-pips">
+      <div class="level-pips" id="level-pips" style="display:flex;gap:5px;align-items:center;">
         <div class="pip"></div><div class="pip"></div><div class="pip"></div>
         <div class="pip"></div><div class="pip"></div>
       </div>
     </div>
+    <!-- HP bar strip -->
+    <div class="hp-track"><div class="hp-bar-fill" id="hp-bar-fill"></div></div>
 
     <!-- ARD Content card (the "opponent") -->
     <div class="content-card" id="content-card">
@@ -154,6 +156,18 @@
     <div id="wheel-legend" class="wheel-legend"></div>
     <button class="reset-btn" onclick="App.resetGame()">Spiel zurücksetzen</button>
   </section>
+
+  <!-- ══ Battle Intro Overlay ══ -->
+  <div id="battle-intro" class="battle-intro">
+    <div class="bi-flash"></div>
+    <div class="bi-content">
+      <div class="bi-eyebrow">— Betreten —</div>
+      <div class="bi-world-name" id="bi-world-name"></div>
+    </div>
+  </div>
+
+  <!-- ══ Screen Flash ══ -->
+  <div id="screen-flash" class="screen-flash"></div>
 
   <script src="app.js"></script>
 </body>
