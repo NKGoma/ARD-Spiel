@@ -2,72 +2,81 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>ARD Life – Medien als Lebensspiel</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- ── SCREEN 1: Start ── -->
+  <!-- ══ SCREEN 1: Cinematic Start ══ -->
   <section id="screen-start" class="screen active">
-    <div class="start-inner">
-      <div class="ard-logo">ARD</div>
-      <h1>ARD Life</h1>
-      <p class="tagline">Medien als Lebensspiel</p>
-      <p class="sub">Lerne. Entdecke. Wachse.</p>
-      <button class="btn btn-primary" onclick="App.goCategories()">Spielen</button>
+    <div id="particles" class="particles"></div>
+    <div class="start-content">
+      <div class="ard-badge">ARD</div>
+      <h1 class="start-title">ARD Life</h1>
+      <p class="start-tagline">Sechs Welten. Unendliches Wissen.</p>
+      <button class="btn-explore" onclick="App.goWorlds()">Erkunde ›</button>
     </div>
   </section>
 
-  <!-- ── SCREEN 2: Kategorien ── -->
-  <section id="screen-categories" class="screen">
-    <header class="top-bar">
-      <span class="points-badge">⭐ <span id="total-points">0</span></span>
-      <h2>Kategorien</h2>
-      <button class="icon-btn" onclick="App.goWheel()" title="Wheel of Life">🔵</button>
-    </header>
-    <div id="category-grid" class="category-grid"></div>
+  <!-- ══ SCREEN 2: World Explorer ══ -->
+  <section id="screen-worlds" class="screen">
+    <div class="worlds-topbar">
+      <div class="pts-badge">⭐ <span id="total-points">0</span></div>
+      <button class="wheel-pill" onclick="App.goWheel()">Wheel ○</button>
+    </div>
+    <div class="worlds-viewport" id="worlds-viewport">
+      <div class="worlds-track" id="worlds-track"></div>
+    </div>
+    <div class="worlds-nav">
+      <button class="nav-arrow" id="btn-prev" onclick="App.prevWorld()">‹</button>
+      <div class="world-dots" id="world-dots"></div>
+      <button class="nav-arrow" id="btn-next" onclick="App.nextWorld()">›</button>
+    </div>
   </section>
 
-  <!-- ── SCREEN 3: Quiz ── -->
+  <!-- ══ SCREEN 3: Quiz ══ -->
   <section id="screen-quiz" class="screen">
-    <header class="top-bar">
-      <button class="icon-btn" onclick="App.goCategories()">←</button>
-      <span id="quiz-cat-label" class="cat-label"></span>
-      <span class="points-badge">⭐ <span id="quiz-points">0</span></span>
+    <header class="quiz-header">
+      <button class="back-btn" onclick="App.goWorlds()">←</button>
+      <span id="quiz-cat-name" class="quiz-cat-name"></span>
+      <div class="pts-badge">⭐ <span id="quiz-points">0</span></div>
     </header>
     <div class="quiz-body">
-      <p id="quiz-source" class="source-label"></p>
-      <h2 id="quiz-question" class="question-text"></h2>
-      <div id="quiz-options" class="options-list"></div>
+      <p id="quiz-source" class="quiz-source"></p>
+      <h2 id="quiz-question" class="quiz-question"></h2>
+      <div id="quiz-options" class="quiz-options"></div>
     </div>
   </section>
 
-  <!-- ── SCREEN 4: Feedback ── -->
+  <!-- ══ SCREEN 4: Feedback ══ -->
   <section id="screen-feedback" class="screen">
-    <div class="feedback-body">
-      <div id="feedback-icon" class="feedback-icon"></div>
-      <h2 id="feedback-title" class="feedback-title"></h2>
-      <p id="feedback-insight" class="feedback-insight"></p>
-      <a id="feedback-link" href="#" target="_blank" rel="noopener" class="ard-link">ARD Inhalt ansehen →</a>
-      <div class="feedback-actions">
-        <button class="btn btn-primary" onclick="App.goCategories()">Weiter</button>
+    <div class="feedback-inner">
+      <div id="fb-icon" class="fb-icon"></div>
+      <h2 id="fb-result" class="fb-result"></h2>
+      <p id="fb-correct-label" class="fb-correct-label"></p>
+      <div class="insight-card" id="insight-card">
+        <div class="insight-bar" id="insight-bar"></div>
+        <p id="fb-insight"></p>
       </div>
+      <a id="fb-link" class="ard-pill" href="#" target="_blank" rel="noopener">ARD Inhalt ansehen →</a>
+      <button class="btn-weiter" onclick="App.goWorlds()">Weiter →</button>
     </div>
+    <div class="point-float" id="point-float">+1 ⭐</div>
   </section>
 
-  <!-- ── SCREEN 5: Wheel of Life ── -->
+  <!-- ══ SCREEN 5: Wheel of Life ══ -->
   <section id="screen-wheel" class="screen">
-    <header class="top-bar">
-      <button class="icon-btn" onclick="App.goCategories()">←</button>
-      <h2>Wheel of Life</h2>
-      <span class="points-badge">⭐ <span id="wheel-points">0</span></span>
+    <header class="wheel-header">
+      <button class="back-btn back-btn--light" onclick="App.goWorlds()">←</button>
+      <h2 class="wheel-title">Wheel of Life</h2>
+      <div class="pts-badge pts-badge--gold">⭐ <span id="wheel-points">0</span></div>
     </header>
-    <div class="wheel-container">
+    <div class="wheel-wrap">
       <svg id="wheel-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
     <div id="wheel-legend" class="wheel-legend"></div>
-    <button class="btn btn-ghost reset-btn" onclick="App.resetGame()">Spiel zurücksetzen</button>
+    <button class="reset-btn" onclick="App.resetGame()">Spiel zurücksetzen</button>
   </section>
 
   <script src="app.js"></script>
