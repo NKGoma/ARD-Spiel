@@ -116,13 +116,75 @@ function spawnConfetti(container) {
 /* ═════════════════════════════════════════
    WORLD THEMES (6 categories)
 ═════════════════════════════════════════ */
+/* Category SVG logos – monochromatic ARD blue style */
+const _SVG_GRUNDWISSEN = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="28" height="28" style="vertical-align:middle;flex-shrink:0">
+  <circle cx="50" cy="50" r="44" fill="none" stroke="#005A9F" stroke-width="5" stroke-dasharray="58 14 58 14" stroke-linecap="round"/>
+  <polygon points="50,27 30,34 28,71 50,64" fill="#1E5C8E"/><polygon points="50,27 37,31 35,67 50,64" fill="#005A9F"/>
+  <polygon points="50,27 70,34 72,71 50,64" fill="#1E5C8E"/><polygon points="50,27 63,31 65,67 50,64" fill="#005A9F"/>
+  <line x1="50" y1="27" x2="50" y2="64" stroke="white" stroke-width="2"/>
+  <line x1="50" y1="64" x2="38" y2="77" stroke="white" stroke-width="1.5"/><line x1="50" y1="64" x2="50" y2="79" stroke="white" stroke-width="1.5"/><line x1="50" y1="64" x2="62" y2="77" stroke="white" stroke-width="1.5"/>
+</svg>`;
+
+const _SVG_SPORT = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="28" height="28" style="vertical-align:middle;flex-shrink:0">
+  <path d="M18,50 A32,32 0 1,1 50,82" fill="none" stroke="#005A9F" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="28" cy="42" r="9" fill="none" stroke="#005A9F" stroke-width="3.5"/><circle cx="40" cy="42" r="9" fill="none" stroke="#1E5C8E" stroke-width="3.5"/><circle cx="52" cy="42" r="9" fill="none" stroke="#005A9F" stroke-width="3.5"/>
+  <polygon points="70,27 65,30 68,34" fill="#005A9F"/>
+  <polygon points="68,34 62,47 72,44 77,35" fill="#1E5C8E"/>
+  <polygon points="62,47 58,61 65,59 68,47" fill="#005A9F"/><polygon points="72,44 78,59 72,61 70,47" fill="#1E5C8E"/>
+  <polygon points="62,39 54,49 58,51 66,42" fill="#005A9F"/><polygon points="74,38 80,49 76,51 71,41" fill="#005A9F"/>
+</svg>`;
+
+const _SVG_MUSIK = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="28" height="28" style="vertical-align:middle;flex-shrink:0">
+  <circle cx="50" cy="50" r="44" fill="none" stroke="#005A9F" stroke-width="5" stroke-dasharray="48 12 48 12" stroke-linecap="round"/>
+  <polygon points="50,18 46,24 48,30 54,28 56,22" fill="#1E5C8E"/>
+  <polygon points="48,30 42,37 42,44 50,46 56,42 54,34" fill="#005A9F"/>
+  <polygon points="42,44 40,52 44,58 50,58 52,52 50,46" fill="#1E5C8E"/>
+  <polygon points="44,58 42,66 48,70 54,66 52,58" fill="#005A9F"/>
+  <ellipse cx="44" cy="74" rx="8" ry="6" fill="#1E5C8E"/>
+  <polygon points="48,70 46,78 50,82 54,78 52,70" fill="#005A9F"/>
+  <line x1="52" y1="30" x2="52" y2="80" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+</svg>`;
+
+const _SVG_HUMOR = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="28" height="28" style="vertical-align:middle;flex-shrink:0">
+  <circle cx="50" cy="50" r="44" fill="none" stroke="#005A9F" stroke-width="5" stroke-dasharray="54 12 54 12" stroke-linecap="round"/>
+  <circle cx="50" cy="50" r="35" fill="#1A1D24" stroke="#005A9F" stroke-width="3"/>
+  <polygon points="34,37 32,42 36,45 40,42 38,37" fill="#005A9F"/>
+  <path d="M56,40 Q62,35 68,40" fill="none" stroke="#005A9F" stroke-width="3" stroke-linecap="round"/>
+  <path d="M56,40 Q62,45 68,40" fill="none" stroke="#005A9F" stroke-width="3" stroke-linecap="round"/>
+  <polygon points="31,57 30,67 70,67 69,57" fill="#005A9F"/>
+  <rect x="33" y="59" width="34" height="6" rx="2" fill="white"/>
+</svg>`;
+
+const _SVG_GESCHICHTE = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="28" height="28" style="vertical-align:middle;flex-shrink:0">
+  <circle cx="50" cy="50" r="44" fill="none" stroke="#005A9F" stroke-width="5" stroke-dasharray="50 12 50 12" stroke-linecap="round"/>
+  <rect x="36" y="80" width="28" height="4" rx="1" fill="#1E5C8E"/><rect x="38" y="76" width="24" height="4" rx="1" fill="#005A9F"/>
+  <rect x="40" y="64" width="4" height="12" fill="#1E5C8E"/><rect x="46" y="64" width="4" height="12" fill="#005A9F"/><rect x="52" y="64" width="4" height="12" fill="#1E5C8E"/><rect x="58" y="64" width="4" height="12" fill="#005A9F"/>
+  <rect x="36" y="17" width="28" height="4" rx="1" fill="#1E5C8E"/>
+  <polygon points="36,21 64,21 56,43 44,43" fill="#005A9F"/>
+  <polygon points="41,21 59,21 54,33 46,33" fill="#1E5C8E" opacity="0.55"/>
+  <rect x="44" y="43" width="12" height="4" rx="1" fill="#1E5C8E"/>
+  <polygon points="44,47 56,47 64,63 36,63" fill="#005A9F"/>
+  <polygon points="45,57 55,57 57,63 43,63" fill="#1E5C8E" opacity="0.55"/>
+  <rect x="36" y="63" width="28" height="4" rx="1" fill="#1E5C8E"/>
+</svg>`;
+
+const _SVG_KULTUR = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="28" height="28" style="vertical-align:middle;flex-shrink:0">
+  <circle cx="50" cy="50" r="44" fill="none" stroke="#005A9F" stroke-width="5" stroke-dasharray="48 12 48 12" stroke-linecap="round"/>
+  <rect x="28" y="30" width="18" height="40" rx="2" fill="#005A9F"/>
+  <rect x="30" y="34" width="14" height="12" rx="1" fill="#1A1D24"/><rect x="30" y="50" width="14" height="12" rx="1" fill="#1A1D24"/>
+  <rect x="28" y="32" width="3" height="3" rx="1" fill="#1A1D24"/><rect x="28" y="39" width="3" height="3" rx="1" fill="#1A1D24"/><rect x="28" y="46" width="3" height="3" rx="1" fill="#1A1D24"/><rect x="28" y="53" width="3" height="3" rx="1" fill="#1A1D24"/><rect x="28" y="60" width="3" height="3" rx="1" fill="#1A1D24"/>
+  <rect x="54" y="30" width="18" height="40" rx="2" fill="#1E5C8E"/>
+  <rect x="56" y="34" width="14" height="12" rx="1" fill="#1A1D24"/><rect x="56" y="50" width="14" height="12" rx="1" fill="#1A1D24"/>
+  <rect x="69" y="32" width="3" height="3" rx="1" fill="#1A1D24"/><rect x="69" y="39" width="3" height="3" rx="1" fill="#1A1D24"/><rect x="69" y="46" width="3" height="3" rx="1" fill="#1A1D24"/><rect x="69" y="53" width="3" height="3" rx="1" fill="#1A1D24"/><rect x="69" y="60" width="3" height="3" rx="1" fill="#1A1D24"/>
+</svg>`;
+
 const WORLDS = {
-  grundwissen: { accent:'#81c784', accentGlow:'#4caf50', btnBg:'#2e7d32', label:'Grundwissen', emoji:'🧠' },
-  sport:       { accent:'#64b5f6', accentGlow:'#1976d2', btnBg:'#1565c0', label:'Sport',       emoji:'⚽' },
-  musik:       { accent:'#ce93d8', accentGlow:'#9c27b0', btnBg:'#6a1b9a', label:'Musik',       emoji:'🎵' },
-  humor:       { accent:'#ffcc02', accentGlow:'#ff9800', btnBg:'#bf360c', label:'Humor',       emoji:'😂' },
-  geschichte:  { accent:'#d4a96a', accentGlow:'#8d6e63', btnBg:'#5d4037', label:'Geschichte',  emoji:'📚' },
-  kultur:      { accent:'#90a4ae', accentGlow:'#607d8b', btnBg:'#37474f', label:'Kultur',      emoji:'🌍' },
+  grundwissen: { accent:'#0A6ED1', accentGlow:'#005A9F', btnBg:'#003478', label:'Grundwissen', emoji:'🧠', svg:_SVG_GRUNDWISSEN },
+  sport:       { accent:'#1E88E5', accentGlow:'#005A9F', btnBg:'#003478', label:'Sport',       emoji:'⚽', svg:_SVG_SPORT       },
+  musik:       { accent:'#0A6ED1', accentGlow:'#005A9F', btnBg:'#003478', label:'Musik',       emoji:'🎵', svg:_SVG_MUSIK       },
+  humor:       { accent:'#F5A623', accentGlow:'#cc8800', btnBg:'#7a5200', label:'Humor',       emoji:'😂', svg:_SVG_HUMOR       },
+  geschichte:  { accent:'#C7CBD1', accentGlow:'#8A9099', btnBg:'#3a3f48', label:'Geschichte',  emoji:'📚', svg:_SVG_GESCHICHTE  },
+  kultur:      { accent:'#0A6ED1', accentGlow:'#005A9F', btnBg:'#003478', label:'Kultur',      emoji:'🌍', svg:_SVG_KULTUR      },
 };
 
 const PLAYER_COLORS  = ['#ff6b6b','#4ecdc4','#ffd700','#c084fc'];
@@ -218,6 +280,180 @@ const ARD_EVENTS = [
 ];
 
 /* ═════════════════════════════════════════
+   ZUFALLS-RAD (SPIN THE WHEEL)
+═════════════════════════════════════════ */
+const WHEEL_SEGMENTS = [
+  { emoji:'🎯', label:'Doppelpunkte', desc:'Deine nächste Frage zählt doppelt!',           color:'#005A9F', effect:'double_next'   },
+  { emoji:'💸', label:'Punkteklau',   desc:'Du stiehlst 2 Punkte vom Führenden!',          color:'#0A6ED1', effect:'steal_2_leader' },
+  { emoji:'⚡', label:'Turbo!',       desc:'Rücke sofort 3 Felder vor!',                   color:'#1E88E5', effect:'advance_3'      },
+  { emoji:'🔄', label:'Tausch!',      desc:'Tausche Position mit einem zufälligen Gegner!',color:'#003878', effect:'swap_position'  },
+  { emoji:'🌊', label:'Alle ran!',    desc:'Alle Spieler beantworten die nächste Frage!',  color:'#005A9F', effect:'all_answer'     },
+  { emoji:'📺', label:'Sendepause',   desc:'Aussetzen – aber +3 Punkte für dich!',         color:'#0A6ED1', effect:'skip_gain_3'   },
+  { emoji:'🃏', label:'Joker',        desc:'Wähle deine Fragenkategorie frei!',            color:'#1E88E5', effect:'free_category'  },
+  { emoji:'🎲', label:'Glücksrad',    desc:'Zufälliger Punktgewinn oder -verlust!',        color:'#003878', effect:'random_points'  },
+];
+
+let _wheelUsedThisTurn = false;
+let _wheelSpinning     = false;
+let _pendingWheelEffect = null;
+
+function synthSpin() {
+  [220,277,330,415,523,659,784,1047].forEach((f,i) => playTone(f,'sine',0.14,0.16,i*0.07));
+}
+
+function drawWheel(rotation) {
+  const canvas = document.getElementById('wheel-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const cx = 150, cy = 150, r = 138;
+  const n = WHEEL_SEGMENTS.length;
+  const segAngle = (2 * Math.PI) / n;
+  ctx.clearRect(0, 0, 300, 300);
+
+  WHEEL_SEGMENTS.forEach((seg, i) => {
+    const startA = rotation + i * segAngle - Math.PI / 2;
+    const endA   = startA + segAngle;
+    const lighter = i % 2 === 0;
+
+    // Segment fill
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, startA, endA);
+    ctx.closePath();
+    ctx.fillStyle = lighter ? seg.color : _lightenHex(seg.color, 28);
+    ctx.fill();
+    ctx.strokeStyle = '#0F1115';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Emoji + label
+    const midA = startA + segAngle / 2;
+    const tx = cx + Math.cos(midA) * (r * 0.62);
+    const ty = cy + Math.sin(midA) * (r * 0.62);
+    ctx.save();
+    ctx.translate(tx, ty);
+    ctx.rotate(midA + Math.PI / 2);
+    ctx.font = '18px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(seg.emoji, 0, -7);
+    ctx.font = 'bold 8px Inter, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.fillText(seg.label.toUpperCase(), 0, 9);
+    ctx.restore();
+  });
+
+  // Center circle
+  ctx.beginPath();
+  ctx.arc(cx, cy, 20, 0, 2 * Math.PI);
+  ctx.fillStyle = '#0F1115';
+  ctx.fill();
+  ctx.strokeStyle = '#005A9F';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+function _lightenHex(hex, amount) {
+  const num = parseInt(hex.replace('#',''), 16);
+  const r = Math.min(255, (num >> 16) + amount);
+  const g = Math.min(255, ((num >> 8) & 0xff) + amount);
+  const b = Math.min(255, (num & 0xff) + amount);
+  return `rgb(${r},${g},${b})`;
+}
+
+function showWheelResult(index) {
+  const seg = WHEEL_SEGMENTS[index];
+  const resultEl = document.getElementById('wheel-result');
+  resultEl.innerHTML = `
+    <span class="wheel-result-emoji">${seg.emoji}</span>
+    <div class="wheel-result-title">${seg.label}</div>
+    <div class="wheel-result-desc">${seg.desc}</div>
+  `;
+  resultEl.style.display = 'block';
+  document.getElementById('wheel-close-btn').style.display = 'inline-block';
+  flashScreen('correct');
+  synthUnlock();
+}
+
+function applyWheelEffect(effect) {
+  const gs = gameState;
+  if (!gs || !gs.players) return;
+  const cp = gs.players[gs.currentIndex];
+
+  switch (effect) {
+    case 'double_next':
+      gs.wheelDoubleNext = true;
+      showNarrator(`🎯 ${cp.name}: Nächste Frage zählt DOPPELT!`, 3000);
+      break;
+
+    case 'steal_2_leader': {
+      const sorted = [...gs.players].sort((a,b) => b.points - a.points);
+      const leader = sorted[0];
+      if (leader !== cp && leader.points >= 2) {
+        leader.points -= 2; cp.points += 2;
+        renderScoreStrip();
+        showNarrator(`💸 ${cp.name} stiehlt 2 Punkte von ${leader.name}!`, 3000);
+        synthSteal();
+      } else {
+        cp.points += 1; renderScoreStrip();
+        showNarrator(`💸 Kein Diebstahl möglich – +1 Punkt!`, 2500);
+      }
+      break;
+    }
+
+    case 'advance_3':
+      showNarrator(`⚡ ${cp.name} rückt 3 Felder vor!`, 2500);
+      setTimeout(() => animateMove(cp, Math.min(3, BOARD.length - 1 - cp.position), () => {
+        resolveSpace(cp);
+      }), 400);
+      break;
+
+    case 'swap_position': {
+      const others = gs.players.filter((_,i) => i !== gs.currentIndex);
+      if (others.length > 0) {
+        const target = others[Math.floor(Math.random() * others.length)];
+        const tmp = cp.position;
+        cp.position = target.position;
+        target.position = tmp;
+        renderTokens();
+        showNarrator(`🔄 ${cp.name} tauscht Position mit ${target.name}!`, 3000);
+      } else {
+        showNarrator(`🔄 Kein Tausch möglich!`, 2000);
+      }
+      break;
+    }
+
+    case 'all_answer':
+      gs.wheelAllAnswer = true;
+      showNarrator(`🌊 Alle müssen die nächste Frage beantworten!`, 3000);
+      break;
+
+    case 'skip_gain_3':
+      cp.points += 3; renderScoreStrip();
+      animateScoreUpdate(cp, 3, true);
+      showNarrator(`📺 ${cp.name}: Aussetzen – aber +3 Punkte!`, 3000);
+      gs.skipNextTurn = (gs.skipNextTurn || 0);
+      // Mark this player to skip their next natural turn after roll
+      gs.wheelSkipAfterRoll = true;
+      break;
+
+    case 'free_category':
+      gs.wheelFreeCategory = true;
+      showNarrator(`🃏 ${cp.name}: Wähle deine Fragenkategorie nach dem Würfeln frei!`, 3500);
+      break;
+
+    case 'random_points': {
+      const delta = Math.floor(Math.random() * 9) - 3; // -3 to +5
+      cp.points = Math.max(0, cp.points + delta);
+      renderScoreStrip();
+      animateScoreUpdate(cp, delta, delta >= 0);
+      showNarrator(`🎲 ${delta >= 0 ? '+' + delta : delta} Punkte für ${cp.name}!`, 3000);
+      break;
+    }
+  }
+}
+
+/* ═════════════════════════════════════════
    GAME STATE
 ═════════════════════════════════════════ */
 let DATA = null;
@@ -234,6 +470,11 @@ let gameState = {
   bonusNextGlobal: false,
   pendingDuel: null,
   _handoffCallback: null,
+  // Wheel effect flags
+  wheelDoubleNext:  false,
+  wheelAllAnswer:   false,
+  wheelFreeCategory: false,
+  wheelSkipAfterRoll: false,
 };
 
 function currentPlayer() {
@@ -263,6 +504,11 @@ function nextTurn() {
   gameState.currentPlayerIdx = next;
   gameState.phase = 'roll';
   updateScoreStrip();
+
+  // Reset wheel for the new turn
+  _wheelUsedThisTurn = false;
+  const wBtn = document.getElementById('wheel-trigger-btn');
+  if (wBtn) wBtn.classList.remove('used');
 
   // Show pass-and-play handoff screen
   showHandoff(gameState.players[next], () => {
@@ -538,6 +784,12 @@ function updateTurnControls() {
   const rollBtn = document.getElementById('roll-btn');
   rollBtn.style.background = cp.color;
   rollBtn.disabled = false;
+  // Sync wheel button state
+  const wBtn = document.getElementById('wheel-trigger-btn');
+  if (wBtn) {
+    if (_wheelUsedThisTurn) wBtn.classList.add('used');
+    else wBtn.classList.remove('used');
+  }
 }
 
 /* ═════════════════════════════════════════
@@ -604,9 +856,19 @@ function resolveSpace(player) {
     return;
   }
   if (space.type === 'question' || space.type === 'bonus') {
-    const pts = (space.type === 'bonus' || gameState.bonusNextGlobal) ? 4 : 2;
+    let pts = (space.type === 'bonus' || gameState.bonusNextGlobal) ? 4 : 2;
     if (gameState.bonusNextGlobal) gameState.bonusNextGlobal = false;
-    showQuestion(player, space.cat, pts);
+    // Wheel: double next question
+    if (gameState.wheelDoubleNext) { pts *= 2; gameState.wheelDoubleNext = false; showNarrator(`🎯 Doppelpunkte aktiv! +${pts} Punkte möglich!`, 2000); }
+    // Wheel: free category choice
+    let cat = space.cat;
+    if (gameState.wheelFreeCategory) {
+      gameState.wheelFreeCategory = false;
+      const cats = Object.keys(WORLDS);
+      cat = cats[Math.floor(Math.random() * cats.length)];
+      showNarrator(`🃏 Joker! Kategorie: ${WORLDS[cat].label}`, 2000);
+    }
+    showQuestion(player, cat, pts);
     return;
   }
   if (space.type === 'duel') {
@@ -665,7 +927,7 @@ function showQuestion(player, catId, pts) {
   // Header
   document.getElementById('qs-player-tag').textContent   = `${player.avatar} ${player.name || 'Spieler'}`;
   document.getElementById('qs-player-tag').style.color   = player.color;
-  document.getElementById('qs-category-tag').textContent = `${w.emoji} ${w.label}`;
+  document.getElementById('qs-category-tag').innerHTML = `${w.svg}<span style="margin-left:5px">${w.label}</span>`;
   document.getElementById('qs-category-tag').style.color = w.accent;
   document.getElementById('qs-pts-tag').textContent      = `+${pts} ⭐`;
   document.getElementById('qs-source').textContent       = q.title;
@@ -1147,6 +1409,11 @@ const Game = {
     gameState.skipNextPlayer     = false;
     gameState.bonusNextGlobal    = false;
     gameState.pendingDuel        = null;
+    gameState.wheelDoubleNext    = false;
+    gameState.wheelAllAnswer     = false;
+    gameState.wheelFreeCategory  = false;
+    gameState.wheelSkipAfterRoll = false;
+    _wheelUsedThisTurn = false;
 
     showScreen('screen-board');
     renderBoard();
@@ -1163,6 +1430,15 @@ const Game = {
 
   roll() {
     if (gameState.phase !== 'roll') return;
+
+    // Wheel skip_gain_3 effect: end turn immediately
+    if (gameState.wheelSkipAfterRoll) {
+      gameState.wheelSkipAfterRoll = false;
+      showNarrator(`📺 Sendepause – nächste Runde!`, 2000);
+      setTimeout(nextTurn, 2200);
+      return;
+    }
+
     gameState.phase = 'moving';
     const btn = document.getElementById('roll-btn');
     btn.disabled = true;
@@ -1186,6 +1462,62 @@ const Game = {
     if (cb) cb();
   },
 
+  openWheel() {
+    if (gameState.phase !== 'roll') return;
+    if (_wheelUsedThisTurn) { showNarrator('🎰 Zufalls-Rad schon benutzt diese Runde!', 2000); return; }
+    const overlay = document.getElementById('wheel-overlay');
+    if (!overlay) return;
+    overlay.classList.add('active');
+    document.getElementById('wheel-result').style.display = 'none';
+    document.getElementById('wheel-close-btn').style.display = 'none';
+    document.getElementById('wheel-spin-btn').disabled = false;
+    drawWheel(0);
+  },
+
+  spinWheel() {
+    if (_wheelSpinning) return;
+    _wheelSpinning = true;
+    document.getElementById('wheel-spin-btn').disabled = true;
+
+    const targetIdx  = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
+    const segAngle   = (2 * Math.PI) / WHEEL_SEGMENTS.length;
+    const targetAngle = -(targetIdx * segAngle + segAngle / 2);
+    const totalRot    = Math.PI * 2 * (6 + Math.random() * 3) + targetAngle;
+    const duration    = 3800;
+    let startTs = null;
+
+    synthSpin();
+
+    function animate(ts) {
+      if (!startTs) startTs = ts;
+      const elapsed = ts - startTs;
+      const t = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - t, 4);
+      drawWheel(totalRot * ease);
+      if (t < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        _wheelSpinning = false;
+        _pendingWheelEffect = WHEEL_SEGMENTS[targetIdx].effect;
+        showWheelResult(targetIdx);
+      }
+    }
+    requestAnimationFrame(animate);
+  },
+
+  closeWheel() {
+    const overlay = document.getElementById('wheel-overlay');
+    if (overlay) overlay.classList.remove('active');
+    _wheelUsedThisTurn = true;
+    const btn = document.getElementById('wheel-trigger-btn');
+    if (btn) btn.classList.add('used');
+    if (_pendingWheelEffect) {
+      const eff = _pendingWheelEffect;
+      _pendingWheelEffect = null;
+      applyWheelEffect(eff);
+    }
+  },
+
   rematch() {
     // Same players, reset everything
     gameState.players.forEach(p => { p.position = 0; p.points = 0; p.bildung = 0; p.gemeinschaft = 0; p.glueck = 0; });
@@ -1198,6 +1530,13 @@ const Game = {
     gameState.skipNextPlayer     = false;
     gameState.bonusNextGlobal    = false;
     gameState.pendingDuel        = null;
+    gameState.wheelDoubleNext    = false;
+    gameState.wheelAllAnswer     = false;
+    gameState.wheelFreeCategory  = false;
+    gameState.wheelSkipAfterRoll = false;
+    _wheelUsedThisTurn = false;
+    const wBtn = document.getElementById('wheel-trigger-btn');
+    if (wBtn) wBtn.classList.remove('used');
 
     showScreen('screen-board');
     renderBoard();
@@ -1223,11 +1562,11 @@ async function init() {
     showScreen('screen-start');
   } catch(err) {
     document.body.innerHTML = `
-      <div style="padding:40px;color:#aac8ff;font-family:sans-serif;line-height:1.7;background:#0d0d14;height:100vh">
-        <strong style="color:#0064ff;font-size:20px">ARD Life</strong><br><br>
+      <div style="padding:40px;color:#C7CBD1;font-family:'Inter',sans-serif;line-height:1.7;background:#0F1115;height:100vh">
+        <strong style="color:#0A6ED1;font-size:20px">ARD Life</strong><br><br>
         Ladefehler: ${err.message}<br><br>
         Öffne die App über einen lokalen Server:<br>
-        <code style="background:#16162a;padding:6px 10px;border-radius:6px;display:inline-block;margin-top:6px">npx serve .</code>
+        <code style="background:#1A1D24;padding:6px 10px;border-radius:6px;display:inline-block;margin-top:6px">npx serve .</code>
       </div>`;
   }
 }
