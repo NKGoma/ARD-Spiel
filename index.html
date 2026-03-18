@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ARD Life – Medien als Lebensspiel</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ── SCREEN 1: Start ── -->
+  <section id="screen-start" class="screen active">
+    <div class="start-inner">
+      <div class="ard-logo">ARD</div>
+      <h1>ARD Life</h1>
+      <p class="tagline">Medien als Lebensspiel</p>
+      <p class="sub">Lerne. Entdecke. Wachse.</p>
+      <button class="btn btn-primary" onclick="App.goCategories()">Spielen</button>
+    </div>
+  </section>
+
+  <!-- ── SCREEN 2: Kategorien ── -->
+  <section id="screen-categories" class="screen">
+    <header class="top-bar">
+      <span class="points-badge">⭐ <span id="total-points">0</span></span>
+      <h2>Kategorien</h2>
+      <button class="icon-btn" onclick="App.goWheel()" title="Wheel of Life">🔵</button>
+    </header>
+    <div id="category-grid" class="category-grid"></div>
+  </section>
+
+  <!-- ── SCREEN 3: Quiz ── -->
+  <section id="screen-quiz" class="screen">
+    <header class="top-bar">
+      <button class="icon-btn" onclick="App.goCategories()">←</button>
+      <span id="quiz-cat-label" class="cat-label"></span>
+      <span class="points-badge">⭐ <span id="quiz-points">0</span></span>
+    </header>
+    <div class="quiz-body">
+      <p id="quiz-source" class="source-label"></p>
+      <h2 id="quiz-question" class="question-text"></h2>
+      <div id="quiz-options" class="options-list"></div>
+    </div>
+  </section>
+
+  <!-- ── SCREEN 4: Feedback ── -->
+  <section id="screen-feedback" class="screen">
+    <div class="feedback-body">
+      <div id="feedback-icon" class="feedback-icon"></div>
+      <h2 id="feedback-title" class="feedback-title"></h2>
+      <p id="feedback-insight" class="feedback-insight"></p>
+      <a id="feedback-link" href="#" target="_blank" rel="noopener" class="ard-link">ARD Inhalt ansehen →</a>
+      <div class="feedback-actions">
+        <button class="btn btn-primary" onclick="App.goCategories()">Weiter</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SCREEN 5: Wheel of Life ── -->
+  <section id="screen-wheel" class="screen">
+    <header class="top-bar">
+      <button class="icon-btn" onclick="App.goCategories()">←</button>
+      <h2>Wheel of Life</h2>
+      <span class="points-badge">⭐ <span id="wheel-points">0</span></span>
+    </header>
+    <div class="wheel-container">
+      <svg id="wheel-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div id="wheel-legend" class="wheel-legend"></div>
+    <button class="btn btn-ghost reset-btn" onclick="App.resetGame()">Spiel zurücksetzen</button>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
